@@ -1,0 +1,329 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Redis 的持久化机制 | 高亮的杂货铺</title>
+<meta name="description" content="Happy coding!" />
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1564058195648">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://gaoliang.me">
+  <img class="avatar" src="https://gaoliang.me/images/avatar.png?v=1564058195648" alt="">
+  </a>
+  <h1 class="site-title">
+    高亮的杂货铺
+  </h1>
+  <p class="site-description">
+    Happy coding!
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/gaoliang" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Redis 的持久化机制
+            </h2>
+            <div class="post-info">
+              <span>
+                2018-04-14
+              </span>
+              <span>
+                2 min read
+              </span>
+              
+                <a href="https://gaoliang.me/tag/FEf2w2wu8" class="post-tag">
+                  # Redis
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://gaoliang.me/post-images/how-redis-do-persistence.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>Redis 的持久化（Persistence）机制可以有效避免 redis 服务器在遇到故障时数据丢失的问题，发生故障重启后重新载入持久化的内容就可以恢复数据。redis 有两种持久化机制 RDB 和 AOF。</p>
+<!-- more -->
+<h2 id="持久化的一些概念">持久化的一些概念</h2>
+<p>持久化一般有两种实现方式，一种是类似 MySQL 的 dump 命令的快照方式，这种方式每次调用会将数据库中的全部内容都一次性写入到硬盘中，恢复的时候也可以一次性将全部数据恢复出来。 另一种则是类似于 MySQL 的 Binlog 的方式，每当数据库内容更新时，记录下所有写操作的执行，恢复时，按照日志的顺序把所有的操作再执行一遍就可以恢复原来的数据。</p>
+<h2 id="rdbredis-database-快照方式">RDB（Redis DataBase) 快照方式</h2>
+<p>RDB 是利用快照实现的一种持久化技术，在 redis 中，内存中的数据经过 RDB 持久化后，会被保存到硬盘上的RDB二进制文件中，当我们需要恢复数据时，重新加载到内存中即可。 在进行快照时，如果系统中存在陈旧的快照，那么 RDB 会先新建快照，完成后再替换陈旧的快照。 每次持久化的时间复杂度为 O(n)。</p>
+<h3 id="rdb-的触发方式">RDB 的触发方式</h3>
+<h4 id="save-和-bgsave">save 和 bgsave</h4>
+<p>save 和 bgsave 都可以通过用户主动调用的方式来完成数据的持久化，区别是save 是一个同步命令，执行时会阻塞 redis 的主线程，而 redis 又是单进程单线程的，这就会导致 save 执行的过程中，其他的指令只能排队阻塞等待执行。 bgsave 则是通过 fork() 系统调用新建一个子进程在后台完成数据持久化任务，不会阻塞主线程。<br>
+他们的主要区别如下：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>save</th>
+<th>bgsave</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>阻塞？</td>
+<td>是</td>
+<td>是(调用 fork() 时)</td>
+</tr>
+<tr>
+<td>优点</td>
+<td>不需要额外消耗内存</td>
+<td>不会阻塞客户端其他命令</td>
+</tr>
+<tr>
+<td>缺点</td>
+<td>需要阻塞，部分场景不允许</td>
+<td>fork消耗系统资源</td>
+</tr>
+</tbody>
+</table>
+<h4 id="自动触发">自动触发</h4>
+<p>redis 会根据配置文件自动触发 bgsave 命令完成数据的持久化，通常情况下在 redis.conf 文件中我们会看到下面这样的配置项</p>
+<pre><code>save 900 1
+save 300 10
+save 60 10000
+</code></pre>
+<p>save N M表示在 N 秒之内，redis 至少发生 M 次修改则 redis 抓快照到磁盘。 这个三条记录只要有一个满足要求就执行 bgsave 命令。一般项目中不启用自动触发</p>
+<h4 id="其他的触发方式容易忽略的">其他的触发方式（容易忽略的）</h4>
+<ul>
+<li>全量复制（如主从复制时）</li>
+<li>debug reload</li>
+<li>shutdown</li>
+</ul>
+<h2 id="aofappend-only-file-日志方式">AOF（Append Only File） 日志方式</h2>
+<p>RDB出现的问题：</p>
+<ol>
+<li>时间复杂度为O(n)，耗时耗性能</li>
+<li>不可控，丢失数据，只有固定的时间点的数据会被持久化</li>
+</ol>
+<p>AOF的原理： 其实就是记录每一条命令，不过是保存在专有的 AOF 格式。AOF 的写入几乎是实时的。</p>
+<h3 id="aof-的写入策略">AOF 的写入策略</h3>
+<p>从内存中将数据复制到硬盘扇区是一项较为耗时的操作，redis 的 AOF 为我们提供了三种决定写入时机的策略，分别是 always, everysec 和 no。</p>
+<h4 id="always-策略">always 策略</h4>
+<p>每次执行命令都会调用 fsync 将命令写入到日志文件中，大数据量时非常慢但是十分安全。这种方式 IO 开销很大，对于一般的 sata 盘只有几百 TPS。</p>
+<h4 id="everysec-策略">everysec 策略</h4>
+<p>每秒将 redis 缓冲区中缓存的命令调用 fsync 写入到 aof 日志文件中，速度快了很多但是可能会丢失最近一秒的数据。</p>
+<h4 id="no-策略">no 策略</h4>
+<p>操作系统决定何时应该刷新，不可控</p>
+<h3 id="aof-重写">AOF 重写</h3>
+<p>当我们写入的命令很多之后，aof文件就会变得非常大，为了尽可能优化aof文件的大小，加快恢复的速度，会对aof文件进行重写。</p>
+<h4 id="aof-重写的两种方式">AOF 重写的两种方式</h4>
+<ol>
+<li>bgrewriteaof 命令（利用fork异步进行）</li>
+<li>自动重写，有两个配置项，auto-aof-rewrite-min-size，表示需要进行重写的尺寸和 auto-aof-rewrite-percentage，表示aof文件的增长率。同时满足两个条件时则 redis 会自动进行重写。</li>
+</ol>
+<h2 id="rdb-和-aof-的对比">RDB 和 AOF 的对比</h2>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>RDB</th>
+<th>AOF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>恢复优先级</td>
+<td>低</td>
+<td>高</td>
+</tr>
+<tr>
+<td>体积</td>
+<td>小</td>
+<td>大</td>
+</tr>
+<tr>
+<td>恢复速度</td>
+<td>快</td>
+<td>慢</td>
+</tr>
+<tr>
+<td>数据安全性</td>
+<td>丢数据</td>
+<td>根据策略决定</td>
+</tr>
+<tr>
+<td>轻重</td>
+<td>重</td>
+<td>轻</td>
+</tr>
+</tbody>
+</table>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E6%8C%81%E4%B9%85%E5%8C%96%E7%9A%84%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5">持久化的一些概念</a></li>
+<li><a href="#rdbredis-database-%E5%BF%AB%E7%85%A7%E6%96%B9%E5%BC%8F">RDB（Redis DataBase) 快照方式</a>
+<ul>
+<li><a href="#rdb-%E7%9A%84%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F">RDB 的触发方式</a>
+<ul>
+<li><a href="#save-%E5%92%8C-bgsave">save 和 bgsave</a></li>
+<li><a href="#%E8%87%AA%E5%8A%A8%E8%A7%A6%E5%8F%91">自动触发</a></li>
+<li><a href="#%E5%85%B6%E4%BB%96%E7%9A%84%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F%E5%AE%B9%E6%98%93%E5%BF%BD%E7%95%A5%E7%9A%84">其他的触发方式（容易忽略的）</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#aofappend-only-file-%E6%97%A5%E5%BF%97%E6%96%B9%E5%BC%8F">AOF（Append Only File） 日志方式</a>
+<ul>
+<li><a href="#aof-%E7%9A%84%E5%86%99%E5%85%A5%E7%AD%96%E7%95%A5">AOF 的写入策略</a>
+<ul>
+<li><a href="#always-%E7%AD%96%E7%95%A5">always 策略</a></li>
+<li><a href="#everysec-%E7%AD%96%E7%95%A5">everysec 策略</a></li>
+<li><a href="#no-%E7%AD%96%E7%95%A5">no 策略</a></li>
+</ul>
+</li>
+<li><a href="#aof-%E9%87%8D%E5%86%99">AOF 重写</a>
+<ul>
+<li><a href="#aof-%E9%87%8D%E5%86%99%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F">AOF 重写的两种方式</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#rdb-%E5%92%8C-aof-%E7%9A%84%E5%AF%B9%E6%AF%94">RDB 和 AOF 的对比</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+
+        
+          
+
+          
+            <link rel="stylesheet" href="https://unpkg.com/disqusjs@1.1/dist/disqusjs.css">
+<script src="https://unpkg.com/disqusjs@1.1/dist/disqus.js"></script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+var options = {
+  shortname: 'gaoliang',
+  apikey: 'yetuLkolNo1SQ1c6oRQdEdOLdIpLHymjVOvj23cvFTFwbgwBpfjtGTHKmsSlwdfl',
+}
+if ('') {
+  options.api = ''
+}
+var dsqjs = new DisqusJS(options)
+
+</script>
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | 
+  <a class="rss" href="https://gaoliang.me/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+
+  let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+  // This should probably be throttled.
+  // Especially because it triggers during smooth scrolling.
+  // https://lodash.com/docs/4.17.10#throttle
+  // You could do like...
+  // window.addEventListener("scroll", () => {
+  //    _.throttle(doThatStuff, 100);
+  // });
+  // Only not doing it here to keep this Pen dependency-free.
+
+  window.addEventListener("scroll", event => {
+    let fromTop = window.scrollY;
+
+    mainNavLinks.forEach((link, index) => {
+      let section = document.getElementById(decodeURI(link.hash).substring(1));
+      let nextSection = null
+      if (mainNavLinks[index + 1]) {
+        nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+      }
+      console.log('section.offsetHeight', section.offsetHeight);
+      if (section.offsetTop <= fromTop) {
+        if (nextSection) {
+          if (nextSection.offsetTop > fromTop) {
+            link.classList.add("current");
+          } else {
+            link.classList.remove("current");    
+          }
+        } else {
+          link.classList.add("current");
+        }
+      } else {
+        link.classList.remove("current");
+      }
+    });
+  });
+
+</script>
+
+      </div>
+    </div>
+  </body>
+</html>

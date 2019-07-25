@@ -1,0 +1,338 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Redis 常用 API 总结 | 高亮的杂货铺</title>
+<meta name="description" content="Happy coding!" />
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1564058195648">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://gaoliang.me">
+  <img class="avatar" src="https://gaoliang.me/images/avatar.png?v=1564058195648" alt="">
+  </a>
+  <h1 class="site-title">
+    高亮的杂货铺
+  </h1>
+  <p class="site-description">
+    Happy coding!
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/gaoliang" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Redis 常用 API 总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2018-04-15
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+                <a href="https://gaoliang.me/tag/FEf2w2wu8" class="post-tag">
+                  # Redis
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://gaoliang.me/post-images/redis-commonly-used-apis.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="常用基本命令">常用基本命令</h2>
+<ul>
+<li><code>keys [pattern]</code> 所有满足pattern的key，一般不用 O(n)</li>
+<li><code>dbsize</code> 所有key的总数 O(1)</li>
+<li><code>exists key</code> 检查key是否存在 O(1)</li>
+<li><code>del key</code> 删除指定的key-value，可以删除多个 O(1)</li>
+<li><code>expire key seconds</code> 设置key在seconds秒之后过期 O(1)</li>
+<li><code>ttl key</code> 查询key剩余的过期时间 O(1)</li>
+<li><code>persist key</code> 去掉过期时间，不再过期 O(1)</li>
+<li><code>type key</code>  返回key的类型[string hash list set zset none] O(1)</li>
+</ul>
+<h2 id="数据结构api">数据结构API</h2>
+<p>redis 对外的数据类型有 string，hash，list，set，sorted set，但对于同一种数据类型的不同键值对，其内部的编码方式可能不同。 我们可以用<code>OBJECT ENCODING key</code> 命令来查看对应的key的内部编码方式。</p>
+<h3 id="string-字符串">string 字符串</h3>
+<p>字符串类型的结构： key -&gt; value<br>
+内部编码包括 raw, int, embstr<br>
+常用API：</p>
+<ul>
+<li><code>get key</code> 获取key的value</li>
+<li><code>getrange key start end</code> 获取子串</li>
+<li><code>mget key1 key2 key3</code>  批量获取，为原子操作</li>
+<li><code>set key value</code> 设置key为value</li>
+<li><code>setnx key value</code> 当key不存在时，设置key为value</li>
+<li><code>set key value xx</code> 当key存在时才设置</li>
+<li><code>setrange key index value</code> 指定下标设置一个新的值</li>
+<li><code>mset key1 value1 key2 value2</code> 批量设置值</li>
+<li><code>getset key newvalue</code> 返回旧值并设置新值</li>
+<li><code>append key value</code> 追加字符串</li>
+<li><code>strlen key</code> 获取value的长度（字节数）O(1) 可得内部其实记录了字符串的长度。</li>
+<li><code>del key</code> 删除</li>
+<li><code>incr key</code>  +1</li>
+<li><code>decr key</code> -1</li>
+<li><code>incrby key k</code> +k</li>
+<li><code>decrby key k</code> -k</li>
+</ul>
+<h3 id="hash-哈希">hash 哈希</h3>
+<p>hash类型的结构: key==&gt;{filed1: value1 field2: value2 ... }  可以看做是一个关系型数据库的一张表，虽然不太恰当</p>
+<p>特点： 其实像是个small redis，或者map map。 注意filed不能相同，value可以相同。</p>
+<p>内部编码包括 hashtable, ziplist</p>
+<p>常用API</p>
+<ul>
+<li><code>hget key field</code> 获取hash key的field字段值</li>
+<li><code>hmget key field1 field2 field3...</code> 一次获取多个filed的值</li>
+<li><code>hset key field value</code> 设置hash key的filed字段值为value</li>
+<li><code>hmset key field1 value1 filed2 value2 ...</code> 一次设置多个值</li>
+<li><code>hdel key field</code> 删除</li>
+<li><code>hexists key field</code> 判断hash key是否有field</li>
+<li><code>hlen key</code> 获取hash key有多少个字段</li>
+<li><code>hgetall key</code> 获取key中所有对应的field和value PS. 小心使用下面这三个命令</li>
+<li><code>hvals key</code> 返回hash key中所有field的values</li>
+<li><code>hkeys key</code> 返回hash key对应的所有的field</li>
+</ul>
+<p>可以发现，很多的API都是可以和string类型对应起来的，很多时候只是加了个h</p>
+<h3 id="list-列表">list 列表</h3>
+<p>list类型的结构: key==&gt;elements[a,b,c,...]<br>
+特点： 有序，可重复，双端操作<br>
+内部编码：linkedlist, ziplist<br>
+常用API:</p>
+<ul>
+<li><code>rpush key value1 value2 ...</code> 从右端插入值,同样还有<code>lpush</code></li>
+<li><code>rpop key</code> 从列表右端弹出一个item,同样的还有<code>lpop</code></li>
+<li><code>linsert key before|after value newValue</code> 在list的指定值前插入newValue</li>
+<li><code>lrem key count value</code>  根据count值，从列表中删除所有value相等的项，如果count&gt;0 则从左到右删除， 如果count&lt;0 则从右往左删，如果count=0，则删除全部value值</li>
+<li><code>lrange key start end</code> 获取列表指定索引范围内的所有item，注意包含end，且支持负索引</li>
+<li><code>ltrim key start end</code> 按照索引范围修剪列表</li>
+<li><code>llen key</code> 获取列表的长度</li>
+<li><code>lset key index newValue</code> 设置列表指定索引值为newValue</li>
+<li><code>brpop key timeout</code> 在没有元素时，阻塞直到有元素能够pop，类似的还有<code>blpop</code>,在做消息队列的时候会很有用</li>
+</ul>
+<h3 id="set-集合">set 集合</h3>
+<p>set类型的结构 key==&gt; {a,b,c,d}<br>
+特点：无序，不可重复，支持集合间操作<br>
+内部编码：hashtable intset</p>
+<h4 id="集合内的api">集合内的API：</h4>
+<ul>
+<li><code>sadd key element1 element2 ...</code> 添加元素，如果存在则添加失败 O(1)</li>
+<li><code>srem key element1 element2 ...</code> 移除元素 O(1)</li>
+<li><code>scard key</code> 计算集合的大小</li>
+<li><code>sismember key element</code> 判断是否在集合中</li>
+<li><code>srandmember key count</code> 从集合中随机挑选count个元素，不会破坏集合</li>
+<li><code>spop key</code> 从集合中随机弹出一个元素，注意是弹出，元素就从集合中移除了</li>
+<li><code>smembers key</code> 所有元素，注意可能会导致阻塞，小心使用</li>
+</ul>
+<h4 id="集合间的api">集合间的API</h4>
+<ul>
+<li><code>sdiff key1 key2</code> 获取差集</li>
+<li><code>sinter key1 key2</code> 获取交集</li>
+<li><code>sunion key1 key</code> 获取并集</li>
+</ul>
+<h3 id="sorted-set-zset-有序集合">sorted set (zset) 有序集合</h3>
+<p>set类型的结构 key==&gt; {score1:value1, score2:value2, ...}<br>
+特点：有序，不可重复<br>
+内部编码：skiplist ziplist<br>
+常用API:</p>
+<ul>
+<li><code>zadd key score element</code> 注意score可以重复，但element不可以重复,时间复杂度为O(logN)</li>
+<li><code>zrem key element</code> 删除，复杂度为O(1)</li>
+<li><code>zscore key elment</code> 获取score</li>
+<li><code>zincrby key increSocre elemnt</code> 增加指定元素的score</li>
+<li><code>zcard key</code> 获取元素个数 时间复杂度为O(1)</li>
+<li><code>zrank key element</code> 获取元素的排名</li>
+<li><code>zrange key start end [WITHSCORES]</code> 返回指定排名范围的元素，并指定是否返回分数，时间复杂度为O(log(n) + m)</li>
+<li><code>zrangebyscore key start end [WITHSCORES]</code> 返回指定score范围的元素，并指定是否返回分数，时间复杂度为O(log(n) + m)</li>
+<li><code>zount key minScore maxScore</code> 返回指定score范围的元素个数，时间复杂度为O(log(n) + m)</li>
+<li><code>zremrangebyrank key start end</code> 删除指定排名范围的元素 时间复杂度为O(log(n) + m)</li>
+<li><code>zremrangebyscore key start end</code> 删除指定score范围的元素 时间复杂度为O(log(n) + m)</li>
+</ul>
+<h2 id="一些问题">一些问题</h2>
+<h3 id="为什么单线程还这么快">为什么单线程还这么快？</h3>
+<ol>
+<li>纯内存操作</li>
+<li>采用非阻塞IO, 内部io模型利用epoll并进行了优化</li>
+<li>没有线程的切换，没有线程切换和竞态消耗</li>
+</ol>
+<h3 id="怎样避免单线程导致的阻塞问题">怎样避免单线程导致的阻塞问题？</h3>
+<p>拒绝长慢命令，包括keys, flushall, flushdb等，不要在线上执行</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%B8%B8%E7%94%A8%E5%9F%BA%E6%9C%AC%E5%91%BD%E4%BB%A4">常用基本命令</a></li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84api">数据结构API</a>
+<ul>
+<li><a href="#string-%E5%AD%97%E7%AC%A6%E4%B8%B2">string 字符串</a></li>
+<li><a href="#hash-%E5%93%88%E5%B8%8C">hash 哈希</a></li>
+<li><a href="#list-%E5%88%97%E8%A1%A8">list 列表</a></li>
+<li><a href="#set-%E9%9B%86%E5%90%88">set 集合</a>
+<ul>
+<li><a href="#%E9%9B%86%E5%90%88%E5%86%85%E7%9A%84api">集合内的API：</a></li>
+<li><a href="#%E9%9B%86%E5%90%88%E9%97%B4%E7%9A%84api">集合间的API</a></li>
+</ul>
+</li>
+<li><a href="#sorted-set-zset-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88">sorted set (zset) 有序集合</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%80%E4%BA%9B%E9%97%AE%E9%A2%98">一些问题</a>
+<ul>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8D%95%E7%BA%BF%E7%A8%8B%E8%BF%98%E8%BF%99%E4%B9%88%E5%BF%AB">为什么单线程还这么快？</a></li>
+<li><a href="#%E6%80%8E%E6%A0%B7%E9%81%BF%E5%85%8D%E5%8D%95%E7%BA%BF%E7%A8%8B%E5%AF%BC%E8%87%B4%E7%9A%84%E9%98%BB%E5%A1%9E%E9%97%AE%E9%A2%98">怎样避免单线程导致的阻塞问题？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://gaoliang.me/post/how-redis-do-persistence">
+              <h3 class="post-title">
+                Redis 的持久化机制
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+
+          
+            <link rel="stylesheet" href="https://unpkg.com/disqusjs@1.1/dist/disqusjs.css">
+<script src="https://unpkg.com/disqusjs@1.1/dist/disqus.js"></script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+var options = {
+  shortname: 'gaoliang',
+  apikey: 'yetuLkolNo1SQ1c6oRQdEdOLdIpLHymjVOvj23cvFTFwbgwBpfjtGTHKmsSlwdfl',
+}
+if ('') {
+  options.api = ''
+}
+var dsqjs = new DisqusJS(options)
+
+</script>
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | 
+  <a class="rss" href="https://gaoliang.me/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+
+  let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+  // This should probably be throttled.
+  // Especially because it triggers during smooth scrolling.
+  // https://lodash.com/docs/4.17.10#throttle
+  // You could do like...
+  // window.addEventListener("scroll", () => {
+  //    _.throttle(doThatStuff, 100);
+  // });
+  // Only not doing it here to keep this Pen dependency-free.
+
+  window.addEventListener("scroll", event => {
+    let fromTop = window.scrollY;
+
+    mainNavLinks.forEach((link, index) => {
+      let section = document.getElementById(decodeURI(link.hash).substring(1));
+      let nextSection = null
+      if (mainNavLinks[index + 1]) {
+        nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+      }
+      console.log('section.offsetHeight', section.offsetHeight);
+      if (section.offsetTop <= fromTop) {
+        if (nextSection) {
+          if (nextSection.offsetTop > fromTop) {
+            link.classList.add("current");
+          } else {
+            link.classList.remove("current");    
+          }
+        } else {
+          link.classList.add("current");
+        }
+      } else {
+        link.classList.remove("current");
+      }
+    });
+  });
+
+</script>
+
+      </div>
+    </div>
+  </body>
+</html>
