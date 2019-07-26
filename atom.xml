@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://gaoliang.me</id>
     <title>高亮的杂货铺</title>
-    <updated>2019-07-25T12:36:48.031Z</updated>
+    <updated>2019-07-26T02:35:54.263Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://gaoliang.me"/>
     <link rel="self" href="https://gaoliang.me/atom.xml"/>
@@ -40,6 +40,299 @@
 <p>未来，它一定会成为你离不开的伙伴</p>
 <p>尽情发挥你的才华吧！</p>
 <p>😘 Enjoy~</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Java学习-类]]></title>
+        <id>https://gaoliang.me/post/java-class-learn</id>
+        <link href="https://gaoliang.me/post/java-class-learn">
+        </link>
+        <updated>2018-04-24T02:06:04.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1-实现一个类">1. 实现一个类</h2>
+<p>定义一个完整类的格式应该是</p>
+<p>[类访问修饰符] [修饰符] 类名 [extend 父类名] [implements 接口列表]{<br>
+...<br>
+}</p>
+<pre><code class="language-java">public class Employee{
+    private String name;
+    private double salary;
+    ... 
+}
+</code></pre>
+<p>类访问修饰符：</p>
+<table>
+<thead>
+<tr>
+<th>类访问修饰符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>public</td>
+<td>可以被所有类访问，注意public类的所在的文件名应该与该类名相同,一个java文件至多有一个public类</td>
+</tr>
+<tr>
+<td>package (缺省)</td>
+<td>仅能被相同包中的类访问，缺省的值</td>
+</tr>
+</tbody>
+</table>
+<p>修饰符:</p>
+<table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th>说明</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>final</td>
+<td>使用此修饰符的类不能被继承</td>
+<td></td>
+</tr>
+<tr>
+<td>abstract</td>
+<td>声明这个类是一个抽象类</td>
+<td>含有抽象方法的类必须声明为抽象类，但是抽象类不一定含有抽象方法</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Python对比：Python由于鸭子类型的存在，很少使用接口和抽象类，但在需要使用时，可以使用ABCMeta元类和abstractmethod装饰器来实现,参考<a href="http://python3-cookbook.readthedocs.io/zh_CN/latest/c08/p12_define_interface_or_abstract_base_class.html">Python3 Cookbook</a></p>
+</blockquote>
+<h2 id="2-类中的成员">2. 类中的成员</h2>
+<p>Java 类中的成员可以为变量、方法、构造器和初始化块。</p>
+<h3 id="实例成员和类成员静态成员">实例成员和类成员(静态成员)</h3>
+<p>Java 类中的成员分为实例成员和类成员, 没有加 static 修饰符的成员为实例成员，加了 static 修饰符的成员为类成员,或者说静态成员，构造方法不能被 static 修饰。</p>
+<pre><code class="language-java">public class Employee{
+    private int id; // 实例变量
+    private static int last_id; // 类变量
+
+    static { // 静态初始化块
+        last_id = 0;
+    }
+
+    Employee(){ // 构造方法
+        last_id += 1;
+        this.id = last_id;
+    }
+
+    // 实例方法
+    public int get_id(){
+        return this.id;
+    }
+
+    // 类方法
+    public static int get_last_id(){
+        return last_id;
+    }
+}
+</code></pre>
+<p>需要注意，静态方法不能访问实例成员，可以在实例上调用静态方法。 静态方法常用于工厂模式，关于初始化块的内容会在后面介绍。</p>
+<blockquote>
+<p>Python对比：Python中也有实例成员和类成员，其中类变量和实例变量与Java中基本类似，但是Python中静态方法和类方法是两种不同的方法类型，分别用<code>@staticmethod</code> 和 <code>@classmethod</code>装饰器装饰，<code>@classmethod</code>装饰的类方法更接近与Java中的类方法，因为其能够访问到类中定义的其他类成员。上述代码的Python实现如下:</p>
+</blockquote>
+<pre><code class="language-python">class Employee:
+    last_id  = 0
+
+    def __init__(self):
+        # (self.类变量名)只能用来访问类变量
+        # 修改时必须用(类名.变量名)
+        # 否则会导致类变量变成实例变量
+        Employee.last_id +=1
+        self.id = self.last_id
+    
+    def get_id(self):
+        return self.id
+    
+    @classmethod
+    def get_last_id(cls):
+        return cls.last_id
+
+</code></pre>
+<h3 id="成员的访问修饰符">成员的访问修饰符</h3>
+<p>Java 中可以对类中的成员使用访问修饰符，Java 支持四中成员访问修饰符，对应的访问等级如下， 注意其与类访问修饰符的联系。</p>
+<table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th>当前类</th>
+<th>同一包内</th>
+<th>子孙类</th>
+<th>其他包</th>
+<th>其他包子孙类</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>public</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>protected</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>N</td>
+<td>Y/N（说明）</td>
+</tr>
+<tr>
+<td>default</td>
+<td>Y</td>
+<td>Y</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+</tr>
+<tr>
+<td>private</td>
+<td>Y</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<p><code>public</code>: 公用访问修饰符， 其修饰的成员可以被任何其他类访问，所有的公有成员都可以被子类继承。</p>
+</li>
+<li>
+<p><code>protect</code>: 受保护的访问修饰符，相较于 public，其修饰的成员不能被其他包中的非子孙类访问，对于子孙类，要分为同包子孙类和非同包子孙类分析。 对于同包子孙类，所有 procted 的成员都可以被访问； 对于非同包的子孙类，较为复杂，可以参考<a href="http://www.runoob.com/w3cnote/java-protected-keyword-detailed-explanation.html">Java protected 关键字详解<br>
+</a>。</p>
+</li>
+<li>
+<p><code>default</code>: 默认访问修饰符，可以被当前类和同一包内的其他类访问。</p>
+</li>
+<li>
+<p><code>private</code>: 私有访问修饰符，最严格的访问修饰符，只能被当前类访问。</p>
+</li>
+</ul>
+<h3 id="final和static修饰符">final和static修饰符</h3>
+<p>static 修饰符在前面已经学习过了，用来定义类级成员。 而 final 修饰符在学习类修饰符时也有提到，被 final 修饰的类不能被继承，其修饰修饰变量和修饰方法时，作用也是类似的。</p>
+<p>final修饰的变量： 表示常量，只能被赋值一次，不能被修改。final 修饰的方法：不能被子类覆盖，但是可以被子类继承。</p>
+<h3 id="初始化块">初始化块</h3>
+<p>初始化块可以分为普通的初始化块和静态初始化块</p>
+<p>普通初始化块： 从某种程度上来说，是构造函数的补充。</p>
+<ul>
+<li>普通初始化块总是在构造函数之前执行</li>
+<li>与构造函数相比，他不接受任何参数。</li>
+<li>一般的使用场景是需要初始化的内容不需要任何参数时，可以提取到初始化块中执行，比如多个构造器中的相同代码可以提取到初始化快中，提高初始化代码的复用。</li>
+</ul>
+<p>静态初始化块：</p>
+<ul>
+<li>在类初始化的阶段调用静态初始化块，而不是创建对象时，因此<strong>总是比普通初始化块要早执行</strong></li>
+<li>只能对静态成员进行初始化，而不能对实例成员进行初始化。</li>
+<li>只能访问静态成员。</li>
+</ul>
+<h3 id="构造器与this">构造器与this</h3>
+<p>构造器是类中的一个特殊的方法，要求其方法名与类名相同，并且不返回然和类型。 其访问修饰符默认是 public 的。 如果指定了其返回值，该方法就只是一个普通方法。</p>
+<p>构造器可以重载，可以使用this语句访问类中的其他实例成员，也可以用 this() 方法访问其他的重载的构造器。</p>
+<h2 id="包的使用">包的使用</h2>
+<p>要把一个类放到包中，需要将包的声明作为源文件的第一个声明。<br>
+如</p>
+<pre><code class="language-java">package com.gaoliang.learn_java;
+
+public class Employee{
+    ...
+}
+</code></pre>
+<p>如果子目录和包的声明相同，即com/gaoliang/learn_java/Employee.java,则执行</p>
+<pre><code class="language-bash">javac com/gaoliang/learn/Employee.java
+</code></pre>
+<p>会在对应的目录产生class文件，然后可以通过全限定的类名运行程序</p>
+<pre><code class="language-bash">java com.gaoliang.learn.Employee
+</code></pre>
+<h3 id="类路径">类路径</h3>
+<p>可以把class文件放到一个或者多个JAR文件中，</p>
+<pre><code>jar cvf library.jar /path/to/*.class ...
+</code></pre>
+<p>如果要试用这些jar文件，则需要通过class path告诉编译器和虚拟机jar文件的位置。class path可以包含</p>
+<ul>
+<li>包含class文件的目录（包含匹配包名的子目录）</li>
+<li>JAR文件</li>
+<li>包含JAR文件的目录</li>
+</ul>
+<p>javac和java命令都有-classpath参数，可以缩写成 -cp，例如</p>
+<pre><code class="language-bash">java -cp .:../libs/lib1.jar:../libs/lib2.jar com.mycompany.Mainclass
+</code></pre>
+<h3 id="导入包">导入包</h3>
+<h4 id="import语句">import语句</h4>
+<p>import语句可以使用户无需使用全限定名的使用类，例如</p>
+<pre><code class="language-java">import java.util.Random;
+Random random =  new Random()
+</code></pre>
+<p>可以使用通配符一次导入一个包中的所有类</p>
+<pre><code class="language-java">import java.util.*;
+</code></pre>
+<p>但是要注意的是通配符只能用来导入类，不能通配的导入包。<br>
+如果出现类名称冲突，需要手动导入自己想要的具体类，手动解决冲突。</p>
+<h4 id="静态导入">静态导入</h4>
+<p>静态导入使用户可以以 import 声明的形式导入静态的方法和变量，例如</p>
+<pre><code class="language-java">import static java.lang.Math.*;
+sqrt(12);
+</code></pre>
+<p><code>sqrt</code>是 Math 类的一个静态方法，可以用<code>import static</code>直接导入。</p>
+<h3 id="嵌套类">嵌套类</h3>
+<p>除了将类组织成包，还可以将一个类定义在另一个类的内部。 这样的类称为嵌套类。</p>
+<h4 id="静态嵌套类">静态嵌套类</h4>
+<p>首先看一个例子</p>
+<pre><code class="language-java">public class Order{
+
+    private static class Item{
+        String description;
+        int quality;
+        double unitPrice;
+        double price() {return quantity * unitPrice;}
+    }
+    
+    private ArrayList&lt;Item&gt; items = new ArrayList&lt;&gt;();
+    ...
+}
+</code></pre>
+<p>这个例子中的 Item 是一个静态嵌套类，由于其使用 private 进行修饰，所以只有Order 类能够使用该类，如果使用 public 进行修饰，由于同时还是一个 static 的类， 所以可以被其他类在外部通过 Order.Item 进行使用。 所以静态嵌套类更像是为一个类增加了一个命名空间，更明显的表示Item是专属与 Order 的，而对于Order 和 Item 来说，两者并没有直接的关系。</p>
+<h4 id="内部类">内部类</h4>
+<p>如果去掉 static 修饰，那么这个嵌套类就变成了内部类。 内部类与静态嵌套类的最大区别是内部类可以获知自己所属的外部类实例。</p>
+<pre><code class="language-java">import java.util.ArrayList;
+
+public class ClassRoom {
+
+    public class Student {
+        String name;
+        int age;
+
+        public Student(String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+        // 注意这里，student是可以获取外部类的引用的
+        // 所以可以使用外部类的变量和方法，比如这里的students
+        public void leave() {
+            students.remove(this);
+            // 也可以写成这样，ClassRoom.this就是外部类实例的引用。
+            // ClassRoom.this.students.remove(this);
+        }
+    }
+
+    private ArrayList&lt;Student&gt; students = new ArrayList&lt;&gt;();
+
+    public Student enroll(String name, int age) {
+        Student newStudent = new Student(name, age);
+        // 其实是 Student newStudent  = this.new Student(name, age)
+        students.add(newStudent);
+        return newStudent;
+    }
+}
+</code></pre>
+<p>去掉了 static， 出现了本质区别， 此时的 Student 类是知道自己所属于的 ClassRoom 实例的，并且可以使用<code>OutClass.this</code>获取外部类实例的引用。</p>
 ]]></content>
     </entry>
     <entry>
