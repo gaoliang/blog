@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>关于 | 高亮的杂货铺</title>
+<title>SSR 、v2ray 等代理模式解析 | 高亮的杂货铺</title>
 <meta name="description" content="Happy coding!" />
 <link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1568692787807">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
@@ -90,11 +90,11 @@
         <div class="post-detail">
           <article class="post">
             <h2 class="post-title">
-              关于
+              SSR 、v2ray 等代理模式解析
             </h2>
             <div class="post-info">
               <span>
-                2019-01-25
+                2019-09-10
               </span>
               <span>
                 1 min read
@@ -104,16 +104,30 @@
             
             <div class="post-content-wrapper">
               <div class="post-content">
-                <p>这里是高亮的杂货铺，高亮的杂货铺是高亮用来记录开发与生活中的杂七杂八的东西的小站，欢迎光临。 下面是关于高亮本人的一些信息。</p>
-<p>2019年毕业，后端程序猿一只，主要使用 Python、Java。</p>
-<p>工作经历如下：</p>
-<ul>
-<li><strong>小米科技</strong>：2019.6 - 至今 Java 后端工程师</li>
-<li><strong>字节跳动</strong>：2018.8 - 2018.11 后台开发实习生</li>
-<li><strong>扇贝单词</strong>：2018.5 - 2018.07 Python 后端开发实习生</li>
-</ul>
-<p>你可以在<a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/">我与我的利器</a>这篇文章中，了解关于他的更多信息信息。</p>
-<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450 src="//music.163.com/outchain/player?type=0&id=2953827535&auto=1&height=430"></iframe>
+                <p>ssr、v2ray-U 等系统代理软件的代理模式配置<br>
+常用的代理软件，通常会有系统代理模式、PAC、代理规则等多项设置，这些设置通常都十分相近，容易混淆，所以做一次简单的梳理。<br>
+ssr-csharp，shadowsocks-windows<br>
+这两个 windows 软件，通常在右键菜单里会有<code>系统代理模式</code>、<code>PAC</code>、<code>代理规则</code>，三个关系到一个 url 是否会走代理的配置，为了搞清楚他们之间的关系，我们需要先知道系统代理和 PAC 是什么</p>
+<ol>
+<li>系统代理<br>
+一个操作系统，无论是 Windows、macOS、Linux 各个发型版本，都会有对应的系统级代理设置功能，这个设置是对所有运行在操作系统上的软件公开的，所有的软件都可以知道当前是否有系统代理可用，自己是否要使用系统代理。<br>
+例如，在 c# 中</li>
+</ol>
+<pre><code class="language-c#">public static System.Net.IWebProxy GetSystemWebProxy();
+</code></pre>
+<p>在我们常用的浏览器中，浏览器类的软件，通常都是默认如果你设置了系统代理，就会通过系统代理来访问外部网络，例如 Chrome、Firefox 等，都有这样的机制。 而其他的软件，通常也会设计自己的代理策略，例如走系统代理，不走系统代理，或者支持用户设置。 例如，下图中 Docker 的 macOS 客户端中，支持设置使用系统代理，但是不支持用户设置为不使用代理。<br>
+<img src="https://gaoliang.me/post-images/1568105455649.png" alt="Docker上的代理设置界面"><br>
+另外，在早期版本的 windows 上，经常会看到一些软件代理设置中，有<code>使用 IE 代理</code>的选项，这是因为早期版本的 Windows，IE 代理设置和系统代理设置是同步的，IE 代理就是系统代理。目前新版本的 Windows 已经不再集成 IE, 所以 大部分软件现在都该叫系统代理设置了。例如下图早期版本的迅雷代理设置截图。<br>
+<img src="https://gaoliang.me/post-images/1568105326854.png" alt="早期版本的迅雷设置界面"><br>
+2. PAC<br>
+要说 PAC，我们就要先了解代理有哪些模式。 打开 macOS 的代理配置界面，可以看到，有多种代理协议可选，常用的包括 HTTP，SOCKS5 等。如果我们设置 HTTP 或者 SOCKS5 代理，那么启用系统代理的应用，就会将所有的请求全部转发到这个代理服务器，通过代理服务器进行访问。通常这对应着我们的 ssr 客户端里的<code>系统代理模式-&gt; 全局模式</code>,这种模式下，使用系统代理的软件，所有的网络请求就全部会通过系统代理设置的代理服务器。</p>
+<p>接下来说 PAC，PAC 是 Proxy Auto-Config 的简写，系统代理可以选用这种模式。 PAC 的意思是代理自动配置，作用是是根据用户请求的地址，决定使用哪个代理服务器，PAC 通常是一个 js 脚本。 这个模式就对应 ssr <code>系统代理模式-&gt; PAC 模式</code> 在 Windows 的 ssr 客户端上，一般还支持设置不通的 PAC 规则， 例如<code>跳过局域网</code>，<code>跳过局域网和大陆IP</code>等，这些功能其实都是通过修改 PAC 的 js 脚本来实现的。<br>
+<img src="https://gaoliang.me/post-images/1568106773345.png" alt="PAC 代理设置"></p>
+<p>知道了系统代理和 PAC 的概念之后，我们来看下 Windows 里面 ssr 客户端的设置<br>
+<code>系统代理模式-直连</code>：顾名思义，不设置任何系统代理，直接连接，不通过代理服务器。<br>
+<code>系统代理模式-全局</code>：全局模式会设置系统代理的 socks5 代理，所有使用系统代理的软件的所有请求，都会通过设置的代理服务器。<br>
+<code>系统代理模式-PAC</code>：设置系统代理走 PAC 模式，使用系统代理的软件发出的请求，会通过 PAC 进行自动代理切换。</p>
+
               </div>
               <div class="toc-container">
                 
@@ -122,6 +136,15 @@
           </article>
         </div>
 
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset">
+              <h3 class="post-title">
+                我与我的利器
+              </h3>
+            </a>
+          </div>
         
 
         

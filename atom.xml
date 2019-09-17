@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://gaoliang.me</id>
     <title>高亮的杂货铺</title>
-    <updated>2019-08-24T12:47:30.647Z</updated>
+    <updated>2019-09-17T03:59:54.154Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://gaoliang.me"/>
     <link rel="self" href="https://gaoliang.me/atom.xml"/>
@@ -10,6 +10,37 @@
     <logo>https://gaoliang.me/images/avatar.png</logo>
     <icon>https://gaoliang.me/favicon.ico</icon>
     <rights>All rights reserved 2019, 高亮的杂货铺</rights>
+    <entry>
+        <title type="html"><![CDATA[SSR 、v2ray 等代理模式解析]]></title>
+        <id>https://gaoliang.me/post/dai-fa-bu</id>
+        <link href="https://gaoliang.me/post/dai-fa-bu">
+        </link>
+        <updated>2019-09-10T08:47:51.000Z</updated>
+        <content type="html"><![CDATA[<p>ssr、v2ray-U 等系统代理软件的代理模式配置<br>
+常用的代理软件，通常会有系统代理模式、PAC、代理规则等多项设置，这些设置通常都十分相近，容易混淆，所以做一次简单的梳理。<br>
+ssr-csharp，shadowsocks-windows<br>
+这两个 windows 软件，通常在右键菜单里会有<code>系统代理模式</code>、<code>PAC</code>、<code>代理规则</code>，三个关系到一个 url 是否会走代理的配置，为了搞清楚他们之间的关系，我们需要先知道系统代理和 PAC 是什么</p>
+<ol>
+<li>系统代理<br>
+一个操作系统，无论是 Windows、macOS、Linux 各个发型版本，都会有对应的系统级代理设置功能，这个设置是对所有运行在操作系统上的软件公开的，所有的软件都可以知道当前是否有系统代理可用，自己是否要使用系统代理。<br>
+例如，在 c# 中</li>
+</ol>
+<pre><code class="language-c#">public static System.Net.IWebProxy GetSystemWebProxy();
+</code></pre>
+<p>在我们常用的浏览器中，浏览器类的软件，通常都是默认如果你设置了系统代理，就会通过系统代理来访问外部网络，例如 Chrome、Firefox 等，都有这样的机制。 而其他的软件，通常也会设计自己的代理策略，例如走系统代理，不走系统代理，或者支持用户设置。 例如，下图中 Docker 的 macOS 客户端中，支持设置使用系统代理，但是不支持用户设置为不使用代理。<br>
+<img src="https://gaoliang.me/post-images/1568105455649.png" alt="Docker上的代理设置界面"><br>
+另外，在早期版本的 windows 上，经常会看到一些软件代理设置中，有<code>使用 IE 代理</code>的选项，这是因为早期版本的 Windows，IE 代理设置和系统代理设置是同步的，IE 代理就是系统代理。目前新版本的 Windows 已经不再集成 IE, 所以 大部分软件现在都该叫系统代理设置了。例如下图早期版本的迅雷代理设置截图。<br>
+<img src="https://gaoliang.me/post-images/1568105326854.png" alt="早期版本的迅雷设置界面"><br>
+2. PAC<br>
+要说 PAC，我们就要先了解代理有哪些模式。 打开 macOS 的代理配置界面，可以看到，有多种代理协议可选，常用的包括 HTTP，SOCKS5 等。如果我们设置 HTTP 或者 SOCKS5 代理，那么启用系统代理的应用，就会将所有的请求全部转发到这个代理服务器，通过代理服务器进行访问。通常这对应着我们的 ssr 客户端里的<code>系统代理模式-&gt; 全局模式</code>,这种模式下，使用系统代理的软件，所有的网络请求就全部会通过系统代理设置的代理服务器。</p>
+<p>接下来说 PAC，PAC 是 Proxy Auto-Config 的简写，系统代理可以选用这种模式。 PAC 的意思是代理自动配置，作用是是根据用户请求的地址，决定使用哪个代理服务器，PAC 通常是一个 js 脚本。 这个模式就对应 ssr <code>系统代理模式-&gt; PAC 模式</code> 在 Windows 的 ssr 客户端上，一般还支持设置不通的 PAC 规则， 例如<code>跳过局域网</code>，<code>跳过局域网和大陆IP</code>等，这些功能其实都是通过修改 PAC 的 js 脚本来实现的。<br>
+<img src="https://gaoliang.me/post-images/1568106773345.png" alt="PAC 代理设置"></p>
+<p>知道了系统代理和 PAC 的概念之后，我们来看下 Windows 里面 ssr 客户端的设置<br>
+<code>系统代理模式-直连</code>：顾名思义，不设置任何系统代理，直接连接，不通过代理服务器。<br>
+<code>系统代理模式-全局</code>：全局模式会设置系统代理的 socks5 代理，所有使用系统代理的软件的所有请求，都会通过设置的代理服务器。<br>
+<code>系统代理模式-PAC</code>：设置系统代理走 PAC 模式，使用系统代理的软件发出的请求，会通过 PAC 进行自动代理切换。</p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[我与我的利器]]></title>
         <id>https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset</id>
@@ -20,6 +51,7 @@
 <p>更新记录：</p>
 <blockquote>
 <ul>
+<li>2019 年 9 月 17 日：更新一波</li>
 <li>2019 年 8 月 23 日：有工位了，更新一波</li>
 <li>2019 年 7 月 26 日：参加工作一个月，本文创建</li>
 </ul>
@@ -33,6 +65,7 @@
 <li><strong><a href="https://item.jd.com/5456134.html">小米笔记本Pro 16+256</a></strong>：搭配黑果小兵的<a href="https://github.com/daliansky/XiaoMi-Pro-Hackintosh">黑苹果 EFI</a>，使用体验很完美，准备等啥时候苹果改掉愚蠢的蝴蝶键盘再洗白（主要是没钱</li>
 <li><strong><a href="https://item.jd.com/3133825.html">iPhone 7 128G</a></strong>：电池效率 83% 了，每天插着线续命</li>
 <li><strong><a href="https://www.mi.com/mi6/">小米6 64G</a></strong>：也算是一代神机了，835 + 6G，性能还没遇到啥问题</li>
+<li><strong><a href="http://consumer.panasonic.cn/product/cameras-camcorders/lumix-series/lumix-g-series/dmc-gx85.html">松下 GX85 + 松下 25 f1.7 + 松下 14-42A</a></strong>：闲鱼收的，还在摸索</li>
 <li><strong><a href="https://www.bose.cn/zh_cn/products/headphones/over_ear_headphones/quietcomfort-35-wireless-ii.html">Bose QC35 I</a></strong>：一代 QC35，电源键有小毛病但不影响使用</li>
 <li><strong><a href="https://www.apple.com/cn/airpods/">Airpods 2 有线充电版</a></strong>：几乎找不到缺点</li>
 <li><strong><a href="https://2.taobao.com">斐讯 K2P A1</a></strong>：当年前几批车上的，顺利下车并刷上老毛子固件，放在自如出租屋美滋滋</li>
@@ -46,9 +79,10 @@
 <ul>
 <li><strong><a href="https://www.alfredapp.com/">Alfred3</a></strong>：snippets，剪切板，自定义 workflow，爽得很。 另外最近出 Alfred4 了，看了下似乎没啥提升，所以没升级（主要还是没钱</li>
 <li><strong><a href="https://www.proxifier.com/">Proxifier</a></strong>：把 v2，ss 之类的 socks5 代理转换为全局代理，可自定规则，用来加速 git，npm，brew 之流再好不过了，免去配置镜像站的麻烦</li>
+<li><strong><a href="https://1password.com/">1Password 7</a></strong>：保存所有的账号密码、二步验证码等，体验很不错</li>
 <li><strong><a href="https://github.com/Caldis/Mos">Mos</a></strong>：一个用于在 MacOS 上平滑你的鼠标滚动效果或单独设置滚动方向的小工具, 让你的滚轮爽如触控板</li>
 <li><strong><a href="https://iina.io/">IINA</a></strong>：大概是 macOS 上最好用的视频播放器了吧，同时又那么好看，找不到拒绝的理由</li>
-<li><strong><a href="https://bjango.com/mac/istatmenus/">iStat Menus</a></strong> 在菜单栏监控你的电脑状态</li>
+<li><strong><a href="https://bjango.com/mac/istatmenus/">iStat Menus</a></strong> 在菜单栏监控你的电脑状态，满足强迫症的一切要求</li>
 <li><strong><a href="https://www.jetbrains.com/">JetBrains 全家桶</a></strong>：主力开发工具，IDEA、PyCharm 都是我的老朋友</li>
 <li><strong><a href="http://Gridea.dev">Gridea</a></strong>：一个静态博客写作客户端，界面很漂亮，并且支持三个平台。 本博客就是基于此构建</li>
 <li><strong><a href="https://code.visualstudio.com/">VS Code</a></strong>：偶尔写前端时用，速度快</li>
