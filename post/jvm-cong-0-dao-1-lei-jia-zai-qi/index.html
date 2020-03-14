@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hello Gridea | 高亮的杂货铺</title>
+<title>JVM从0到1-类加载器 | 高亮的杂货铺</title>
 <meta name="description" content="Happy coding!" />
 <link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1584181320081">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
@@ -96,54 +96,50 @@
         <div class="post-detail">
           <article class="post">
             <h2 class="post-title">
-              Hello Gridea
+              JVM从0到1-类加载器
             </h2>
             <div class="post-info">
               <span>
-                2018-12-12
+                2020-03-14
               </span>
               <span>
-                2 min read
+                4 min read
               </span>
               
-                <a href="https://gaoliang.me/tag/TJXhs69YH/" class="post-tag">
-                  # Gridea
+                <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+                  # JVM
+                </a>
+              
+                <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+                  # Java
                 </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://gaoliang.me/post-images/hello-gridea.png" alt="">
-            
             <div class="post-content-wrapper">
               <div class="post-content">
-                <p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+                <p>Java虚拟机设计团队有意把类加载阶段中的“通过一个类的全限定名来获取描述该类的二进制字节流”这个动作放到Java虚拟机外部去实现，以便让应用程序自己决定如何去获取所需的类。实现这个动作的代码被称为“类加载器”（Class Loader）。</p>
 <!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="http://hvenotes.fehey.com/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>𝖶𝗂𝗇𝖽𝗈𝗐𝗌</strong> 或 <strong>𝖬𝖺𝖼𝖮𝖲</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
+<h2 id="类与类加载器">类与类加载器</h2>
+<p>类加载器只用来实现类的加载动作，但在他Java程序中起的作用却远超类加载阶段。 对于任意一个类，都必须由加载他的类加载器和类本身一起确定其在Java虚拟机中的唯一性，也就是说，比较两个类是否是相等的，只有在两个类是同一个类加载器加载的前提下才有意义，否则一定是不相等的。</p>
+<h2 id="双亲委派模型">双亲委派模型</h2>
+<p>在Java虚拟机的角度来看，只有两种类加载器，一种是启动类加载器(Bootstrap ClassLoader)，用C++实现，是虚拟机自身的一部分；另一种就是其他的类加载器，用Java语言实现，独立与虚拟机之外，而且全部都继承自java.lang.ClassLoader。</p>
+<p>在Java开发人员的角度，类加载器应当划分的更细致，从JDK1.2以来，Java一致保持着三层类加载器，双亲委派的类加载结构。</p>
+<p>启动类加载器负责加载存在与<code>&lt;JAVA_HOME&gt;\lib</code>目录或者被<code>-Xbootclasspath</code>参数指定的路径中存放的Java虚拟机能够识别的类库加载到虚拟机内存中。 启动类加载器无法被Java程序直接引用，所以当用户编写自定义类加载器时，如果需要把加载请求委派给引导类加载器，那直接使用null代替即可，例如下面的代码。</p>
+<p>扩展类加载器（Extension ClassLoader）：这个类负责加载<code>&lt;JAVA_HOME&gt;\lib\ext</code>目录中的，或者被java.ext.dirs系统变量所指定的路径中的所有类库，由于是Java语言实现的，所以开发者可以直接在程序中使用扩展类加载器来实现Class文件。</p>
+<p>应用程序类加载器（Application Class Loader）这个类加载器是ClassLoader类的getSystemClassLoader方法的返回值，他负责加载用户类路径 ClassPath 上的所有类库，开发这可以直接在代码中使用这个类记载器，如果应用程序没有自定义自己的类加载器，一般情况下这个就是程序默认的类加载器。</p>
+<p><img src="https://gaoliang.me/post-images/1584180378027.png" alt="" loading="lazy"><br>
+图中展示的各种类加载器之间的层次关系被称为类加载器的双亲委派模型，双亲委派模型要求除了顶层的启动类加载器外，所有的加载器都有自己的父类加载器，但是这里加载器的关系并不是继承，而是通过组合关系来实现复用的。</p>
+<p>双亲委派模型的工作过程是当一个类加载器收到加载请求时，他首先不会自己去尝试加载这个类，而是把这个请求传递委派给父类加载器去完成，每一个层级的类加载器都如此，因此所有的加载请求最终都应该传送到最顶层的启动类加载器，只有父加载器反馈自己无法完成这个加载请求时，子加载器才会尝试自己去完成加载。<br>
+使用双亲委派模型的一个好处就是Java中的类随着类加载器一起有了优先级的层级关系，例如Java.lang.Object，他存放在rt.jar之中，无论哪个类加载器要加载这个类，最终都是委派给处于最顶端的启动类加载器进行加载，因此Object类在程序的各个类加载器环境中都能保证是一个类。</p>
 
               </div>
               <div class="toc-container">
                 <ul class="markdownIt-TOC">
 <li>
 <ul>
-<li><a href="#%E7%89%B9%E6%80%A7">特性👇</a></li>
+<li><a href="#%E7%B1%BB%E4%B8%8E%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8">类与类加载器</a></li>
+<li><a href="#%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE%E6%A8%A1%E5%9E%8B">双亲委派模型</a></li>
 </ul>
 </li>
 </ul>
@@ -153,6 +149,15 @@
           </article>
         </div>
 
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/">
+              <h3 class="post-title">
+                JVM从0到1-类加载机制
+              </h3>
+            </a>
+          </div>
         
 
         

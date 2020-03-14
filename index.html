@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>高亮的杂货铺</title>
 <meta name="description" content="Happy coding!" />
-<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1579442860095">
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1584181320081">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
@@ -29,7 +29,7 @@
       <div class="main-content">
         <div class="site-header">
   <a href="https://gaoliang.me">
-  <img class="avatar" src="https://gaoliang.me/images/avatar.png?v=1579442860095" alt="">
+  <img class="avatar" src="https://gaoliang.me/images/avatar.png?v=1584181320081" alt="">
   </a>
   <h1 class="site-title">
     高亮的杂货铺
@@ -97,7 +97,175 @@
         <div class="post-container">
   
     <article class="post">
-      <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/">
+        <h2 class="post-title">JVM从0到1-类加载器</h2>
+      </a>
+      <div class="post-info">
+        <span>
+          2020-03-14
+        </span>
+        <span>
+          4 min read
+        </span>
+        
+          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+            # JVM
+          </a>
+        
+          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+            # Java
+          </a>
+        
+      </div>
+      
+      <div class="post-abstract">
+        <p>Java虚拟机设计团队有意把类加载阶段中的“通过一个类的全限定名来获取描述该类的二进制字节流”这个动作放到Java虚拟机外部去实现，以便让应用程序自己决定如何去获取所需的类。实现这个动作的代码被称为“类加载器”（Class Loader）。</p>
+
+      </di>
+    </article>
+  
+    <article class="post">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/">
+        <h2 class="post-title">JVM从0到1-类加载机制</h2>
+      </a>
+      <div class="post-info">
+        <span>
+          2020-03-14
+        </span>
+        <span>
+          8 min read
+        </span>
+        
+          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+            # JVM
+          </a>
+        
+          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+            # Java
+          </a>
+        
+      </div>
+      
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi.png')">
+        </a>
+      
+      <div class="post-abstract">
+        <p>一个类型从被加载到虚拟机内从中，到卸载出内存，整个生命周期会经历加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initilization）、使用（Using）和卸载（Unloading）七个阶段，其中验证、准备、解析三个阶段被统称为连接（Linking）</p>
+
+      </di>
+    </article>
+  
+    <article class="post">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-shu-xing-biao/">
+        <h2 class="post-title">JVM从0到1-class文件属性表</h2>
+      </a>
+      <div class="post-info">
+        <span>
+          2020-03-14
+        </span>
+        <span>
+          5 min read
+        </span>
+        
+          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+            # JVM
+          </a>
+        
+          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+            # Java
+          </a>
+        
+      </div>
+      
+      <div class="post-abstract">
+        <p>属性表（attribute_info）在前面的讲解中已经出现过多次，class文件、字段表、方法表都可以由自己携带的属性表集合，以描述某些场景专有的信息。虚拟机规范对属性表的限制稍微宽松一些，不要求各个属性具有严格顺序，而且只要不与已有属性崇明，任何人实现的编译其都可以向属性表中写入自己定义的属性信息，Java虚拟机运行时，会忽略它不认识的属性。</p>
+
+      </di>
+    </article>
+  
+    <article class="post">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/">
+        <h2 class="post-title">JVM从0到1-class文件常量池</h2>
+      </a>
+      <div class="post-info">
+        <span>
+          2020-03-14
+        </span>
+        <span>
+          3 min read
+        </span>
+        
+          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+            # JVM
+          </a>
+        
+          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+            # Java
+          </a>
+        
+      </div>
+      
+      <div class="post-abstract">
+        
+      </di>
+    </article>
+  
+    <article class="post">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/">
+        <h2 class="post-title">JVM从0到1-class文件结构初探</h2>
+      </a>
+      <div class="post-info">
+        <span>
+          2020-03-14
+        </span>
+        <span>
+          9 min read
+        </span>
+        
+          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+            # JVM
+          </a>
+        
+          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+            # Java
+          </a>
+        
+      </div>
+      
+      <div class="post-abstract">
+        
+      </di>
+    </article>
+  
+    <article class="post">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/">
+        <h2 class="post-title">JVM从0到1-内存划分</h2>
+      </a>
+      <div class="post-info">
+        <span>
+          2020-03-13
+        </span>
+        <span>
+          5 min read
+        </span>
+        
+          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+            # JVM
+          </a>
+        
+          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+            # Java
+          </a>
+        
+      </div>
+      
+      <div class="post-abstract">
+        
+      </di>
+    </article>
+  
+    <article class="post">
+      <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/">
         <h2 class="post-title">Java 日志系统梳理</h2>
       </a>
       <div class="post-info">
@@ -110,7 +278,7 @@
         
       </div>
       
-        <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/java-ri-zhi-xi-tong-shu-li.jpg')">
+        <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/java-ri-zhi-xi-tong-shu-li.jpg')">
         </a>
       
       <div class="post-abstract">
@@ -119,7 +287,7 @@
     </article>
   
     <article class="post">
-      <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis">
+      <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/">
         <h2 class="post-title">代理软件的代理模式介绍</h2>
       </a>
       <div class="post-info">
@@ -130,13 +298,13 @@
           4 min read
         </span>
         
-          <a href="https://gaoliang.me/tag/UIik0Mktx" class="post-tag">
+          <a href="https://gaoliang.me/tag/UIik0Mktx/" class="post-tag">
             # 其他
           </a>
         
       </div>
       
-        <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/ssr-v2ray-proxy-analysis.jpg')">
+        <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/ssr-v2ray-proxy-analysis.jpg')">
         </a>
       
       <div class="post-abstract">
@@ -145,7 +313,7 @@
     </article>
   
     <article class="post">
-      <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset">
+      <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/">
         <h2 class="post-title">我与我的利器</h2>
       </a>
       <div class="post-info">
@@ -158,7 +326,7 @@
         
       </div>
       
-        <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/talking-about-me-and-my-favorite-toolset.jpg')">
+        <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/talking-about-me-and-my-favorite-toolset.jpg')">
         </a>
       
       <div class="post-abstract">
@@ -167,7 +335,7 @@
     </article>
   
     <article class="post">
-      <a href="https://gaoliang.me/post/java-class-learn">
+      <a href="https://gaoliang.me/post/java-class-learn/">
         <h2 class="post-title">Java学习-类</h2>
       </a>
       <div class="post-info">
@@ -178,70 +346,17 @@
           9 min read
         </span>
         
-          <a href="https://gaoliang.me/tag/i6PatO6w0" class="post-tag">
+          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
             # Java
           </a>
         
       </div>
       
-        <a href="https://gaoliang.me/post/java-class-learn" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/java-class-learn.jpeg')">
+        <a href="https://gaoliang.me/post/java-class-learn/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/java-class-learn.jpeg')">
         </a>
       
       <div class="post-abstract">
         
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/redis-commonly-used-apis">
-        <h2 class="post-title">Redis 常用 API 总结</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2018-04-15
-        </span>
-        <span>
-          6 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/FEf2w2wu8" class="post-tag">
-            # Redis
-          </a>
-        
-      </div>
-      
-        <a href="https://gaoliang.me/post/redis-commonly-used-apis" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/redis-commonly-used-apis.png')">
-        </a>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/how-redis-do-persistence">
-        <h2 class="post-title">Redis 的持久化机制</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2018-04-14
-        </span>
-        <span>
-          5 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/FEf2w2wu8" class="post-tag">
-            # Redis
-          </a>
-        
-      </div>
-      
-        <a href="https://gaoliang.me/post/how-redis-do-persistence" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/how-redis-do-persistence.png')">
-        </a>
-      
-      <div class="post-abstract">
-        <p>Redis 的持久化（Persistence）机制可以有效避免 redis 服务器在遇到故障时数据丢失的问题，发生故障重启后重新载入持久化的内容就可以恢复数据。redis 有两种持久化机制 RDB 和 AOF。</p>
-
       </di>
     </article>
   
@@ -250,6 +365,8 @@
     
         <div class="pagination-container">
   
+  
+    <a href="https://gaoliang.me/page/2" class="prev-page">下一页</a>
   
 </div>
 

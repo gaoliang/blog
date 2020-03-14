@@ -1,0 +1,350 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JVM从0到1-类加载机制 | 高亮的杂货铺</title>
+<meta name="description" content="Happy coding!" />
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1584181320081">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111489730-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-111489730-2');
+</script>
+
+
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://gaoliang.me">
+  <img class="avatar" src="https://gaoliang.me/images/avatar.png?v=1584181320081" alt="">
+  </a>
+  <h1 class="site-title">
+    高亮的杂货铺
+  </h1>
+  <p class="site-description">
+    Happy coding!
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="https://gaoliang.me/post/experiments" class="menu">
+          试验田
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/gaoliang" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://twitter.com/im_sorghum" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              JVM从0到1-类加载机制
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-03-14
+              </span>
+              <span>
+                8 min read
+              </span>
+              
+                <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+                  # JVM
+                </a>
+              
+                <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+                  # Java
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://gaoliang.me/post-images/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>一个类型从被加载到虚拟机内从中，到卸载出内存，整个生命周期会经历加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initilization）、使用（Using）和卸载（Unloading）七个阶段，其中验证、准备、解析三个阶段被统称为连接（Linking）</p>
+<!-- more -->
+<h2 id="何时进行初始化">何时进行初始化？</h2>
+<p>对于什么时候进行类的加载，java虚拟机规范并没有强制约束。但是对于初始化阶段，Java虚拟机规范则是严格规定了只有六种情况必须立即对类进行初始化（之前的步骤当然必须也要完成）</p>
+<ol>
+<li>遇到new、getstatic、putstatic、invokestatic这四条字节码时，如果类型没有初始化，则要先触发其初始化阶段。 对应的情况包括
+<ul>
+<li>使用new关键字实例化对象。</li>
+<li>读取或者设置一个类的静态字段（被final修饰，已经在编译期间把结果放到常量池的静态字段除外）</li>
+<li>调用一个类型的静态方法的时候。</li>
+</ul>
+</li>
+<li>使用<code>java.lang.reflect</code>包的方法对类型进行反射调用时</li>
+<li>当初始化类的时候，如果发现其父类还没有初始化，那么要先触发其父类的初始化</li>
+<li>当虚拟机启动时，指定要执行的主类</li>
+<li>当使用JDK 7新加入的动态语言支持时</li>
+<li>当一个接口中定义了JDK8中新家入的默认方法时，如果有这个接口的实现类，那么这个接口要在其之前被初始化。</li>
+</ol>
+<p>对于这六种会初始化的常见，Java虚拟机规范中使用了一个非常强烈的限定语，&quot;有且只有&quot;，除此之外，所有引用类型的方法都不会触发初始化，被成为被动引用。 例如，</p>
+<ol>
+<li>被动使用例子1</li>
+</ol>
+<pre><code class="language-java">class SuperClass {
+
+    static {
+        System.out.println(&quot;SuperClass init!&quot;);
+    }
+
+    public static int value = 123;
+}
+
+class SubClass extends SuperClass {
+
+    static {
+        System.out.println(&quot;SubClass init!&quot;);
+    }
+}
+public class NotInitialization_1 {
+
+    public static void main(String[] args) {
+        System.out.println(SubClass.value);
+    }
+
+}
+</code></pre>
+<p>运行这个这个例子，只会输出SuperClass init!，而不会输出SubClass init，这是由于，对于静态字段，只有直接定义这个字段的类才会被初始化，因此通过其子类来引用父类中定义的静态字段，只会触发夫类的初始化，而不会触发子类的初始化。<br>
+2. 被动使用例子2 通过数组定义来引用类，不会触发此类的初始化</p>
+<pre><code class="language-java">public class NotInitialization_2 {
+
+    public static void main(String[] args) {
+        SuperClass[] sca = new SuperClass[10];
+    }
+
+}
+</code></pre>
+<ol start="3">
+<li>被动使用例子3 常量在编译阶段会存入调用类的常量池中，本质上没有直接引用到定义常量的类，因此不会触发定义常量的</li>
+</ol>
+<pre><code class="language-java">public class ConstClass {
+
+    static {
+        System.out.println(&quot;ConstClass init!&quot;);
+    }
+
+    public static final String HELLOWORLD = &quot;hello world&quot;;
+}
+
+public class NotInitialization_3 {
+
+    public static void main(String[] args) {
+        System.out.println(ConstClass.HELLOWORLD);
+    }
+}
+</code></pre>
+<p>例子三是由于在编译阶段进行了常量传播优化，已经将此常量的值直接存储在了NotInitialization_3类的常量池中，后续对这个常量的引用实际都被转换为对NotInitialization_3类自身常量池的引用了。</p>
+<p>此外，还有一个需要注意的，就是接口在初始化时，并不要求其父接口全部都完成初始化，只有在真正使用到父接口的时候，例如引用接口中定义的常量时，才会初始化。</p>
+<h2 id="加载">加载</h2>
+<p>java虚拟机在加载阶段需要做三件事</p>
+<ol>
+<li>通过一个类的全限定名来获取定义此类的二进制字节流</li>
+<li>将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构。</li>
+<li>在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口</li>
+</ol>
+<h2 id="验证">验证</h2>
+<p>验证是连接阶段的第一步，用于确保class文件是符合java虚拟机规范的约束的。</p>
+<ol>
+<li>文件格式验证，这一阶段主要验证字节流是否符合class文件的格式。</li>
+<li>元数据验证，这一极端会对字节码进行语义分析，验证的点包括这个类是否拥有父类、是否继承了不允许继承的类、如果是非抽象类是否实现了其父类或接口的方法、是否有与父类产生矛盾的字段和方法等。</li>
+<li>字节码验证。<br>
+字节码验证是整个验证过程中最复杂的一个阶段，主要目的是对数据流分析和控制流分析，确保予以是合法的，主要是对类的方法提，即class文件中的Code属性进行校验，确保校验类的方法不会再运行时做出危害虚拟机安全的行为。  JDK6后，javac和java虚拟机进行了一项联合优化，把尽可能多的校验挪到了javac中进行。具体做法是给Code属性的属性表中加了以”StackMapTable“的新属性，从而降低了运行时进行验证的耗时。</li>
+<li>符号引用阶段<br>
+这个验证实际发生在虚拟机将符号引用转化为直接引用的时候，这个转化动作将在连接的第三个阶段，即解析阶段中发生，主要校验符号引用通过字符串描述的全限定名是否能够找到对应的类、方法、字段，以及类、方法、字段的可访问行校验等。</li>
+</ol>
+<h2 id="准备">准备</h2>
+<p>准备阶段是为类中定义的变量（即static变量）分配内存并设置初始化的阶段。从概念上来说，这些变量使用的内存应该在方法代中分配，但必须要注意到方法区本身是一个逻辑上的区域，JDK7之前，HotSpot使用永久代来实现方法区，而在JDK8之后，类变量则会随着class对象一起存放在java堆中，这时候类变量在方法去就完全是一个逻辑概念的表述了。</p>
+<p>如果类字段属性表中存在ConstantValue属性，那么准备阶段变量值就会被初始化为ConstantValue所指定的初始化值。</p>
+<h2 id="解析">解析</h2>
+<p>解析阶段是将常量池中的符号引用转换为直接引用的过程，符号引用包括CONSTANT_Class_info、CONSTANT_Fieldref_info、CONSTANT_Methodref_info等。</p>
+<h3 id="符号引用symbolic-references">符号引用(Symbolic References)</h3>
+<p>符号引用以一组符号来描述所引用的目标，符号可以是任何的字面量，只要能找到目标极客，符号引用与虚拟机内存分布无关，引用的目标不一定是加载到虚拟机内存中的内容。 各种虚拟机实现的内存布局可以不同，但是他们接收的符号引用一定是一致的。</p>
+<h3 id="直接引用direct-references">直接引用(Direct References)</h3>
+<p>直接引用是可以直接指向目标的指针、相对偏移量或者是一个能间接定位到目标的句柄。 他是和虚拟机内存布局有直接关联的，如果有了直接引用，那么被引用的目标一定已经在虚拟机的内存中存在了。</p>
+<p>Java虚拟机没有规范解析阶段发生的具体时间。</p>
+<h2 id="初始化">初始化</h2>
+<p>初始化阶段会根据程序员通过编码制定的计划去初始化变量和其他资源，或者说，初始化阶段就是执行类构造器<code>&lt;clinit&gt;()</code>方法的过程，这个方法并不是程序员直接在java代码中直接编写的，而是javac编译器的产物。</p>
+<p><code>&lt;clinit&gt;()</code>方法是由编译器自动收集类中的所有类变量的赋值动作和静态程序语句块(<code>static{}</code>)中的语句合并产生的 ，编译器收集的顺序由语句在源文件中出现的顺序决定，静态块语句中只能访问到定义在静态块语句之前的变量，定义在他之后的变量，静态块语句可以复制，但是不能访问。例如</p>
+<pre><code class="language-java">public class Test {
+  static {
+    i = 0; // 给变量复制可以正常编译通过
+    System.out.print(i); // 这句编译器会提示“非法向前引用”
+  }
+  static int i = 1;
+}
+</code></pre>
+<p><code>&lt;clinit&gt;()</code>方法并不需要显式的调用父类的构造方法，因为java虚拟机保证子类的<code>&lt;clinit&gt;()</code>执行之前，父类的<code>&lt;clinit&gt;()</code>方法必然已经执行过了。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E4%BD%95%E6%97%B6%E8%BF%9B%E8%A1%8C%E5%88%9D%E5%A7%8B%E5%8C%96">何时进行初始化？</a></li>
+<li><a href="#%E5%8A%A0%E8%BD%BD">加载</a></li>
+<li><a href="#%E9%AA%8C%E8%AF%81">验证</a></li>
+<li><a href="#%E5%87%86%E5%A4%87">准备</a></li>
+<li><a href="#%E8%A7%A3%E6%9E%90">解析</a>
+<ul>
+<li><a href="#%E7%AC%A6%E5%8F%B7%E5%BC%95%E7%94%A8symbolic-references">符号引用(Symbolic References)</a></li>
+<li><a href="#%E7%9B%B4%E6%8E%A5%E5%BC%95%E7%94%A8direct-references">直接引用(Direct References)</a></li>
+</ul>
+</li>
+<li><a href="#%E5%88%9D%E5%A7%8B%E5%8C%96">初始化</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-shu-xing-biao/">
+              <h3 class="post-title">
+                JVM从0到1-class文件属性表
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+
+          
+            <link rel="stylesheet" href="https://unpkg.com/disqusjs@1.1/dist/disqusjs.css">
+<script src="https://unpkg.com/disqusjs@1.1/dist/disqus.js"></script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+var options = {
+  shortname: 'gao-liang-de-za-huo-pu',
+  apikey: 'yetuLkolNo1SQ1c6oRQdEdOLdIpLHymjVOvj23cvFTFwbgwBpfjtGTHKmsSlwdfl',
+}
+if ('') {
+  options.api = ''
+}
+var dsqjs = new DisqusJS(options)
+
+</script>
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | 
+  <a class="rss" href="https://gaoliang.me/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+
+  let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+  // This should probably be throttled.
+  // Especially because it triggers during smooth scrolling.
+  // https://lodash.com/docs/4.17.10#throttle
+  // You could do like...
+  // window.addEventListener("scroll", () => {
+  //    _.throttle(doThatStuff, 100);
+  // });
+  // Only not doing it here to keep this Pen dependency-free.
+
+  window.addEventListener("scroll", event => {
+    let fromTop = window.scrollY;
+
+    mainNavLinks.forEach((link, index) => {
+      let section = document.getElementById(decodeURI(link.hash).substring(1));
+      let nextSection = null
+      if (mainNavLinks[index + 1]) {
+        nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+      }
+      console.log('section.offsetHeight', section.offsetHeight);
+      if (section.offsetTop <= fromTop) {
+        if (nextSection) {
+          if (nextSection.offsetTop > fromTop) {
+            link.classList.add("current");
+          } else {
+            link.classList.remove("current");    
+          }
+        } else {
+          link.classList.add("current");
+        }
+      } else {
+        link.classList.remove("current");
+      }
+    });
+  });
+
+</script>
+
+      </div>
+    </div>
+  </body>
+</html>

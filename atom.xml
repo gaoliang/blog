@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://gaoliang.me</id>
     <title>高亮的杂货铺</title>
-    <updated>2020-01-19T14:07:52.643Z</updated>
+    <updated>2020-03-14T10:22:01.942Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://gaoliang.me"/>
     <link rel="self" href="https://gaoliang.me/atom.xml"/>
@@ -11,9 +11,320 @@
     <icon>https://gaoliang.me/favicon.ico</icon>
     <rights>All rights reserved 2020, 高亮的杂货铺</rights>
     <entry>
+        <title type="html"><![CDATA[JVM从0到1-类加载器]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/">
+        </link>
+        <updated>2020-03-14T09:47:32.000Z</updated>
+        <summary type="html"><![CDATA[<p>Java虚拟机设计团队有意把类加载阶段中的“通过一个类的全限定名来获取描述该类的二进制字节流”这个动作放到Java虚拟机外部去实现，以便让应用程序自己决定如何去获取所需的类。实现这个动作的代码被称为“类加载器”（Class Loader）。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Java虚拟机设计团队有意把类加载阶段中的“通过一个类的全限定名来获取描述该类的二进制字节流”这个动作放到Java虚拟机外部去实现，以便让应用程序自己决定如何去获取所需的类。实现这个动作的代码被称为“类加载器”（Class Loader）。</p>
+<!-- more -->
+<h2 id="类与类加载器">类与类加载器</h2>
+<p>类加载器只用来实现类的加载动作，但在他Java程序中起的作用却远超类加载阶段。 对于任意一个类，都必须由加载他的类加载器和类本身一起确定其在Java虚拟机中的唯一性，也就是说，比较两个类是否是相等的，只有在两个类是同一个类加载器加载的前提下才有意义，否则一定是不相等的。</p>
+<h2 id="双亲委派模型">双亲委派模型</h2>
+<p>在Java虚拟机的角度来看，只有两种类加载器，一种是启动类加载器(Bootstrap ClassLoader)，用C++实现，是虚拟机自身的一部分；另一种就是其他的类加载器，用Java语言实现，独立与虚拟机之外，而且全部都继承自java.lang.ClassLoader。</p>
+<p>在Java开发人员的角度，类加载器应当划分的更细致，从JDK1.2以来，Java一致保持着三层类加载器，双亲委派的类加载结构。</p>
+<p>启动类加载器负责加载存在与<code>&lt;JAVA_HOME&gt;\lib</code>目录或者被<code>-Xbootclasspath</code>参数指定的路径中存放的Java虚拟机能够识别的类库加载到虚拟机内存中。 启动类加载器无法被Java程序直接引用，所以当用户编写自定义类加载器时，如果需要把加载请求委派给引导类加载器，那直接使用null代替即可，例如下面的代码。</p>
+<p>扩展类加载器（Extension ClassLoader）：这个类负责加载<code>&lt;JAVA_HOME&gt;\lib\ext</code>目录中的，或者被java.ext.dirs系统变量所指定的路径中的所有类库，由于是Java语言实现的，所以开发者可以直接在程序中使用扩展类加载器来实现Class文件。</p>
+<p>应用程序类加载器（Application Class Loader）这个类加载器是ClassLoader类的getSystemClassLoader方法的返回值，他负责加载用户类路径 ClassPath 上的所有类库，开发这可以直接在代码中使用这个类记载器，如果应用程序没有自定义自己的类加载器，一般情况下这个就是程序默认的类加载器。</p>
+<p><img src="https://gaoliang.me/post-images/1584180378027.png" alt="" loading="lazy"><br>
+图中展示的各种类加载器之间的层次关系被称为类加载器的双亲委派模型，双亲委派模型要求除了顶层的启动类加载器外，所有的加载器都有自己的父类加载器，但是这里加载器的关系并不是继承，而是通过组合关系来实现复用的。</p>
+<p>双亲委派模型的工作过程是当一个类加载器收到加载请求时，他首先不会自己去尝试加载这个类，而是把这个请求传递委派给父类加载器去完成，每一个层级的类加载器都如此，因此所有的加载请求最终都应该传送到最顶层的启动类加载器，只有父加载器反馈自己无法完成这个加载请求时，子加载器才会尝试自己去完成加载。<br>
+使用双亲委派模型的一个好处就是Java中的类随着类加载器一起有了优先级的层级关系，例如Java.lang.Object，他存放在rt.jar之中，无论哪个类加载器要加载这个类，最终都是委派给处于最顶端的启动类加载器进行加载，因此Object类在程序的各个类加载器环境中都能保证是一个类。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-类加载机制]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/">
+        </link>
+        <updated>2020-03-14T08:35:06.000Z</updated>
+        <summary type="html"><![CDATA[<p>一个类型从被加载到虚拟机内从中，到卸载出内存，整个生命周期会经历加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initilization）、使用（Using）和卸载（Unloading）七个阶段，其中验证、准备、解析三个阶段被统称为连接（Linking）</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>一个类型从被加载到虚拟机内从中，到卸载出内存，整个生命周期会经历加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initilization）、使用（Using）和卸载（Unloading）七个阶段，其中验证、准备、解析三个阶段被统称为连接（Linking）</p>
+<!-- more -->
+<h2 id="何时进行初始化">何时进行初始化？</h2>
+<p>对于什么时候进行类的加载，java虚拟机规范并没有强制约束。但是对于初始化阶段，Java虚拟机规范则是严格规定了只有六种情况必须立即对类进行初始化（之前的步骤当然必须也要完成）</p>
+<ol>
+<li>遇到new、getstatic、putstatic、invokestatic这四条字节码时，如果类型没有初始化，则要先触发其初始化阶段。 对应的情况包括
+<ul>
+<li>使用new关键字实例化对象。</li>
+<li>读取或者设置一个类的静态字段（被final修饰，已经在编译期间把结果放到常量池的静态字段除外）</li>
+<li>调用一个类型的静态方法的时候。</li>
+</ul>
+</li>
+<li>使用<code>java.lang.reflect</code>包的方法对类型进行反射调用时</li>
+<li>当初始化类的时候，如果发现其父类还没有初始化，那么要先触发其父类的初始化</li>
+<li>当虚拟机启动时，指定要执行的主类</li>
+<li>当使用JDK 7新加入的动态语言支持时</li>
+<li>当一个接口中定义了JDK8中新家入的默认方法时，如果有这个接口的实现类，那么这个接口要在其之前被初始化。</li>
+</ol>
+<p>对于这六种会初始化的常见，Java虚拟机规范中使用了一个非常强烈的限定语，&quot;有且只有&quot;，除此之外，所有引用类型的方法都不会触发初始化，被成为被动引用。 例如，</p>
+<ol>
+<li>被动使用例子1</li>
+</ol>
+<pre><code class="language-java">class SuperClass {
+
+    static {
+        System.out.println(&quot;SuperClass init!&quot;);
+    }
+
+    public static int value = 123;
+}
+
+class SubClass extends SuperClass {
+
+    static {
+        System.out.println(&quot;SubClass init!&quot;);
+    }
+}
+public class NotInitialization_1 {
+
+    public static void main(String[] args) {
+        System.out.println(SubClass.value);
+    }
+
+}
+</code></pre>
+<p>运行这个这个例子，只会输出SuperClass init!，而不会输出SubClass init，这是由于，对于静态字段，只有直接定义这个字段的类才会被初始化，因此通过其子类来引用父类中定义的静态字段，只会触发夫类的初始化，而不会触发子类的初始化。<br>
+2. 被动使用例子2 通过数组定义来引用类，不会触发此类的初始化</p>
+<pre><code class="language-java">public class NotInitialization_2 {
+
+    public static void main(String[] args) {
+        SuperClass[] sca = new SuperClass[10];
+    }
+
+}
+</code></pre>
+<ol start="3">
+<li>被动使用例子3 常量在编译阶段会存入调用类的常量池中，本质上没有直接引用到定义常量的类，因此不会触发定义常量的</li>
+</ol>
+<pre><code class="language-java">public class ConstClass {
+
+    static {
+        System.out.println(&quot;ConstClass init!&quot;);
+    }
+
+    public static final String HELLOWORLD = &quot;hello world&quot;;
+}
+
+public class NotInitialization_3 {
+
+    public static void main(String[] args) {
+        System.out.println(ConstClass.HELLOWORLD);
+    }
+}
+</code></pre>
+<p>例子三是由于在编译阶段进行了常量传播优化，已经将此常量的值直接存储在了NotInitialization_3类的常量池中，后续对这个常量的引用实际都被转换为对NotInitialization_3类自身常量池的引用了。</p>
+<p>此外，还有一个需要注意的，就是接口在初始化时，并不要求其父接口全部都完成初始化，只有在真正使用到父接口的时候，例如引用接口中定义的常量时，才会初始化。</p>
+<h2 id="加载">加载</h2>
+<p>java虚拟机在加载阶段需要做三件事</p>
+<ol>
+<li>通过一个类的全限定名来获取定义此类的二进制字节流</li>
+<li>将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构。</li>
+<li>在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口</li>
+</ol>
+<h2 id="验证">验证</h2>
+<p>验证是连接阶段的第一步，用于确保class文件是符合java虚拟机规范的约束的。</p>
+<ol>
+<li>文件格式验证，这一阶段主要验证字节流是否符合class文件的格式。</li>
+<li>元数据验证，这一极端会对字节码进行语义分析，验证的点包括这个类是否拥有父类、是否继承了不允许继承的类、如果是非抽象类是否实现了其父类或接口的方法、是否有与父类产生矛盾的字段和方法等。</li>
+<li>字节码验证。<br>
+字节码验证是整个验证过程中最复杂的一个阶段，主要目的是对数据流分析和控制流分析，确保予以是合法的，主要是对类的方法提，即class文件中的Code属性进行校验，确保校验类的方法不会再运行时做出危害虚拟机安全的行为。  JDK6后，javac和java虚拟机进行了一项联合优化，把尽可能多的校验挪到了javac中进行。具体做法是给Code属性的属性表中加了以”StackMapTable“的新属性，从而降低了运行时进行验证的耗时。</li>
+<li>符号引用阶段<br>
+这个验证实际发生在虚拟机将符号引用转化为直接引用的时候，这个转化动作将在连接的第三个阶段，即解析阶段中发生，主要校验符号引用通过字符串描述的全限定名是否能够找到对应的类、方法、字段，以及类、方法、字段的可访问行校验等。</li>
+</ol>
+<h2 id="准备">准备</h2>
+<p>准备阶段是为类中定义的变量（即static变量）分配内存并设置初始化的阶段。从概念上来说，这些变量使用的内存应该在方法代中分配，但必须要注意到方法区本身是一个逻辑上的区域，JDK7之前，HotSpot使用永久代来实现方法区，而在JDK8之后，类变量则会随着class对象一起存放在java堆中，这时候类变量在方法去就完全是一个逻辑概念的表述了。</p>
+<p>如果类字段属性表中存在ConstantValue属性，那么准备阶段变量值就会被初始化为ConstantValue所指定的初始化值。</p>
+<h2 id="解析">解析</h2>
+<p>解析阶段是将常量池中的符号引用转换为直接引用的过程，符号引用包括CONSTANT_Class_info、CONSTANT_Fieldref_info、CONSTANT_Methodref_info等。</p>
+<h3 id="符号引用symbolic-references">符号引用(Symbolic References)</h3>
+<p>符号引用以一组符号来描述所引用的目标，符号可以是任何的字面量，只要能找到目标极客，符号引用与虚拟机内存分布无关，引用的目标不一定是加载到虚拟机内存中的内容。 各种虚拟机实现的内存布局可以不同，但是他们接收的符号引用一定是一致的。</p>
+<h3 id="直接引用direct-references">直接引用(Direct References)</h3>
+<p>直接引用是可以直接指向目标的指针、相对偏移量或者是一个能间接定位到目标的句柄。 他是和虚拟机内存布局有直接关联的，如果有了直接引用，那么被引用的目标一定已经在虚拟机的内存中存在了。</p>
+<p>Java虚拟机没有规范解析阶段发生的具体时间。</p>
+<h2 id="初始化">初始化</h2>
+<p>初始化阶段会根据程序员通过编码制定的计划去初始化变量和其他资源，或者说，初始化阶段就是执行类构造器<code>&lt;clinit&gt;()</code>方法的过程，这个方法并不是程序员直接在java代码中直接编写的，而是javac编译器的产物。</p>
+<p><code>&lt;clinit&gt;()</code>方法是由编译器自动收集类中的所有类变量的赋值动作和静态程序语句块(<code>static{}</code>)中的语句合并产生的 ，编译器收集的顺序由语句在源文件中出现的顺序决定，静态块语句中只能访问到定义在静态块语句之前的变量，定义在他之后的变量，静态块语句可以复制，但是不能访问。例如</p>
+<pre><code class="language-java">public class Test {
+  static {
+    i = 0; // 给变量复制可以正常编译通过
+    System.out.print(i); // 这句编译器会提示“非法向前引用”
+  }
+  static int i = 1;
+}
+</code></pre>
+<p><code>&lt;clinit&gt;()</code>方法并不需要显式的调用父类的构造方法，因为java虚拟机保证子类的<code>&lt;clinit&gt;()</code>执行之前，父类的<code>&lt;clinit&gt;()</code>方法必然已经执行过了。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-class文件属性表]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-shu-xing-biao/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-shu-xing-biao/">
+        </link>
+        <updated>2020-03-14T07:05:58.000Z</updated>
+        <summary type="html"><![CDATA[<p>属性表（attribute_info）在前面的讲解中已经出现过多次，class文件、字段表、方法表都可以由自己携带的属性表集合，以描述某些场景专有的信息。虚拟机规范对属性表的限制稍微宽松一些，不要求各个属性具有严格顺序，而且只要不与已有属性崇明，任何人实现的编译其都可以向属性表中写入自己定义的属性信息，Java虚拟机运行时，会忽略它不认识的属性。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>属性表（attribute_info）在前面的讲解中已经出现过多次，class文件、字段表、方法表都可以由自己携带的属性表集合，以描述某些场景专有的信息。虚拟机规范对属性表的限制稍微宽松一些，不要求各个属性具有严格顺序，而且只要不与已有属性崇明，任何人实现的编译其都可以向属性表中写入自己定义的属性信息，Java虚拟机运行时，会忽略它不认识的属性。</p>
+<!-- more -->
+<p>对于每一个属性，他的名称都要从常量池中引用一个CONSTANT_Utf8_info类型的常量来表示，而属性值的结构是完全自定义的，只需要通过一个u4长度属性来表明属性值所占用的位数即可。<br>
+<img src="https://gaoliang.me/post-images/1584160830127.png" alt="" loading="lazy"></p>
+<p>截止到Java虚拟机规范的Java SE 12版本，预定义的属性项已经增加到了29项。详细见后面的表格</p>
+<h2 id="code属性">Code属性</h2>
+<p>Java程序的方法体经过Javac编译器处理后，最终转换为字节码存储在Code属性中，Code属性出现在方法表中的属性集合之中，但并非所有的方法表都必须有这个属性，比如接口和抽象类中的方法，就不存在Code属性，如果方法表有Code属性存在，那么他的结构如下<br>
+<img src="https://gaoliang.me/post-images/1584169843802.png" alt="" loading="lazy"><br>
+其中，第一个u2 attriibute_name_index，指向了常量池中的一个utf8类型常量的索引，此常量固定值为Code，attribute_length表示了属性值的长度。</p>
+<p>max_stack代表了操作数栈深度的最大值，在方法执行的任意时刻，操作数栈都不会超过这个深度，虚拟机在运行时根据这个值来分配栈帧中的操作树栈深度。</p>
+<p>max_locals代表了局部变量表所需的存储空间，在这里，max_locals的单位是槽(slot)，变量槽是虚拟机为局部变量分配内存的最小单位，对于byte、char、float、int、short、boolean和returnAddress等长度不超过32位的数据类型，每个局部变量占用一个变量槽，而double和long这种64位的数据类型则需要两个变量槽。 方法参数（包括实例方法中隐含的this）、显示异常处理程序的参数（在catch中定义的异常值）、方法体中定义的局部变量都依赖局部变量表来存放。  但是要注意，并不是方法中有多少个局部变量，就把这些局部变量表所占空间之和作为max_locals的值，操作数栈和局部变量表决定了一个方法的栈帧大小，不必要的数量会导致内存的浪费。 Java虚拟机的做法是将局部变量表的局部变量池进行重用，当代码执行超过一个局部变量的作用域时，这个局部变量所占用的局部变量槽可以被其他局部变量使用，javac编译器会根据变量的作用域来分配变量槽来给各个变量使用，然后根据同时生存的最大局部变量数和类型来计算出max_locals的大小。</p>
+<p>code_length和code用来存储Java源程序编译后产生的字节码指令，code_length代表字节码长度，code是用于存储字节码指令的一系列字节流。虽然code_length是一个u4类型的长度值，也就是理论上可以达到2的32次幂，但是根据java虚拟机规范，一个方法不允许超过65535条字节码指令，即实际值使用到了u2的长度。</p>
+<p>在字节码指令之后的是显式异常处理表，异常表对于Code属性来说并不是必须存在的。其结构如图<br>
+<img src="https://gaoliang.me/post-images/1584171878583.png" alt="" loading="lazy"><br>
+字段的含义为，当字节码从start_pc行到end_pc行之间出现了类型为catch_type或者其子类的异常时，则转到第handler_pc行继续处理。 当catch_type的值为0时，代表任意异常情况都需要转到handler_pc行进行处理。</p>
+<h2 id="exceptions属性">Exceptions属性</h2>
+<p>这个Exceptions属性是方法表中与Code属性同级的一项属性。作用是列举一个方法可能抛出的受检查异常（Checked Exceptions），也就是方法描述时，throws关键字后面列举的异常，其结构如下图<br>
+<img src="https://gaoliang.me/post-images/1584173316961.png" alt="" loading="lazy"><br>
+其中exception_index_table指向了常量池中CONSTANT_Class_info的索引。</p>
+<h2 id="linenumbertable属性">LineNumberTable属性</h2>
+<p>LineNumberTable属性是用于描述Java源代码行号和字节码行号之间关系的。他不是运行时必须的，可以通过javac的参数 -g参数进行取消或生成。 如果取消这个属性，最大的影响就是在运行时抛出的异常不会包含报错行号，在调试程序时也无法根据源码行号来设置断点。</p>
+<h2 id="localvariabletable和localvariabletypetable属性">LocalVariableTable和LocalVariableTypeTable属性</h2>
+<p>LocalVariableTable属性是用来描述栈帧中局部变量表的变量与java源码中定义的变量之间的关系，也不是运行时必须的属性，如果不生成，最大的影响是对IDE工具调试时无法根据参数名从上下文中获取参数值。</p>
+<p>在JDK5引入泛型后，LocalVariableTable属性增加了一个姐妹属性，LocalVariableTypeTable，其结构与LocalVariableTable很相似，仅仅是把描述字段的字段描述符替换成了字段的特征签名。由于描述符中泛型参数化类型被擦除，描述符不能准确描述泛型类型了，因此出现了LocalVariableTypeTable属性，使用特征签名来完成泛型的描述。</p>
+<h2 id="附录-预定义属性列表">附录 预定义属性列表</h2>
+<p><img src="https://gaoliang.me/post-images/1584173919837.png" alt="" loading="lazy"><br>
+<img src="https://gaoliang.me/post-images/1584173926306.png" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-class文件常量池]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/">
+        </link>
+        <updated>2020-03-14T04:50:34.000Z</updated>
+        <content type="html"><![CDATA[<p>常量池可以比喻为class文件里的资源仓库，他是class文件结构中与其他项目关联最多的数据，通常也是占据class文件空间最大的项目。</p>
+<p>由于常量池中的常量的数量是不固定的，所以在入口处需要防止一个u2类型的数据，代表常量池容量计数器。需要注意的是，这个计数器从1开始，而不是0，所以常量池计数器的值，实际表示的常量池中的常量数量+1。</p>
+<p>常量池中主要存放两种常量，字面量（Literal）和符号引用（Symbolic References)。字面量比较接近Java语言层面常量的概念，而符号引用则属于编译原理方面的概念，主要包括一下几种</p>
+<ul>
+<li>被模块导出或者开放的包（Package）</li>
+<li>类和接口的全限定名（Full Qualified Name）</li>
+<li>字段的名称和描述（Descriptor）</li>
+<li>方法的名称和描述</li>
+<li>方法句柄和方法类型（Method Handle，Method Type, Invoke Dynamic）</li>
+<li>动态调用点和动态常量（Dynamically-Computed Call Site、Dynamically-computed Constant）<br>
+Javac编译器没有连接这一个步骤，而是在虚拟机加载class文件时及逆行动态连接的，所以class文件中没有保存各个方法、字段在内存中的布局信息，这些字段、方法的引用是在虚拟机运行期间进行转换的。</li>
+</ul>
+<p>常量池中的每一个项目都是一个表，最初设计中只有11种，后续不断扩展，截至到JDK13，常量表中共有17中不同类型的常量。</p>
+<figure data-type="image" tabindex="1"><img src="https://gaoliang.me/post-images/1584163304921.png" alt="" loading="lazy"></figure>
+<p>这其中的每一种类型，都具有独立的结构，因此常量池的结构十分复杂。</p>
+<h2 id="constant_utf8_info">CONSTANT_Utf8_info</h2>
+<p><img src="https://gaoliang.me/post-images/1584163919336.png" alt="" loading="lazy"><br>
+legth说明这这个UTF-8编码的字符串长度是多少字节，他后面紧跟着的是长度为length个字节的UTF-8缩略编码的连续数据。 UTF-8缩略编码与普通UTF-8编码的区别是：从'\u0001'到'\u007f'之间的字符（相当于1～127的ASCII码）的缩略编码使用一个字节表示，从'\u0080'到'\u07ff'之间的所有字符的缩略编码用两个字节表示，从'\u0800'开始到'\uffff'之间的所有字符的缩略编码就按照普通UTF-8编码规则使用三个字节表示。</p>
+<p>由于class文件中方法和字段等都需要引用这个类型的常量来描述名称，所以这个常量的最大长度也就是Java中方法和字段的最大长度，u2，这也就意味着最大值为65535。所以这也意味着Java程序中变量和方法名的大小无法超过64KB。</p>
+<h2 id="constant_class_info">CONSTANT_Class_info</h2>
+<p><img src="https://gaoliang.me/post-images/1584169090290.png" alt="" loading="lazy"><br>
+这种常量表示一个类或者接口的符号引用，其中，name_index是常量池的索引，指向一个常量池中的CONSTANT_Utf8_info类型常量，代表了这个类的全限定名。在字段表、方法表、和属性表中，会引用常量表中的符号引用来进行表达。</p>
+<h2 id="其他字段结构">其他字段结构</h2>
+<p><img src="https://gaoliang.me/post-images/1584169300526.png" alt="" loading="lazy"><br>
+<img src="https://gaoliang.me/post-images/1584169307922.png" alt="" loading="lazy"><br>
+<img src="https://gaoliang.me/post-images/1584169312061.png" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-class文件结构初探]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/">
+        </link>
+        <updated>2020-03-13T16:07:18.000Z</updated>
+        <content type="html"><![CDATA[<p><img src="https://gaoliang.me/post-images/1584115711377.png" alt="" loading="lazy"><br>
+class文件是一组以8个字节为基础单位的二进制流，各个数据项紧凑排列，没有任何分隔符，当遇到需要占用8个字节以上空间的数据项时，会采用<a href="https://www.ruanyifeng.com/blog/2016/11/byte-order.html">大端原则</a>进行排列，即高位在前。</p>
+<p>class文件采用了一种类似C语言结构体的伪结构来存储数据，这个伪结构中，只有两种基本的数据类型，&quot;无符号数&quot;和&quot;表&quot;。</p>
+<p>无符号数属于基本数据类型，用u1，u2，u4，u8分别来表示1、2、4、8个字节的无符号数，这些无符号数可以用来描述数字、索引引用、数值量或者按照UTF-8编码构成的字符串。</p>
+<p>表是由多个无符号数或其他表作为数据结构的复合数据结构，为了便于区分，这里给命名加上了后缀&quot;_info&quot;。整个class文件也可以看作是一张表。</p>
+<p>无论是无符号数还是标配，当需要描述同一个类型的但是数量不定的数据时，经常会前置一个计数器。<br>
+<img src="https://gaoliang.me/post-images/1584115760585.png" alt="" loading="lazy"></p>
+<h2 id="魔数与class文件版本">魔数与Class文件版本</h2>
+<p>class文件的魔数是 0xCAFEBABE(咖啡宝贝？?) ，有兴趣可以查一下这个数字的来历。 魔数占据了4个字节。</p>
+<p>紧接着的是class文件版本号，其中第5、6个字节是次版本号，第7、8个字节是主版本号。 JDK8的版本号是0x00000034，即52.00。 大版本号随着JDK大版本的发布加1。 Java虚拟机规范要求，高版本的JDK能兼容之前版本的class文件，但强制要求不能运行以后任何版本的class文件，即使其中的内容旧版本的jdk也完全可以解析。</p>
+<h2 id="常量池">常量池</h2>
+<p>紧接着的两个字节，是常量池计数器(constant_pool_count)，需要注意的是，这个计数器的值和java中的习惯不同，容量计数是从1开始而不是0开始的，所以其值的大小等于常量池中的成员数+1。 class文件中，只有常量池计数器的是从1开始的。</p>
+<p>常量池中主要存放两大类常量，字面量(Literal)和符号引用(Symbolic References)，字面量比较接近Java语言中常量的概念，例如文本字符串，被声明为final的常量值等。 符号引用属于编译原理方面的概念，主要包括下面几种常量：</p>
+<ul>
+<li>被模块导出或者开放的包（Package）</li>
+<li>类和接口的全限定名（Full Qualified Name）</li>
+<li>字段的名称和描述（Descriptor）</li>
+<li>方法的名称和描述</li>
+<li>方法句柄和方法类型（Method Handle，Method Type, Invoke Dynamic）</li>
+<li>动态调用点和动态常量（Dynamically-Computed Call Site、Dynamically-computed Constant）</li>
+</ul>
+<p>Java在进行编译时，并没有C和C++的连接这个步骤，连接是在class文件加载的时候动态进行的，所以class文件不会保存各个方法和字段最终在内存中的布局，这些个字段、方法的符号引用如果不经过虚拟机的转换是无法获得真正的内存入口的。 Java虚拟机在加载类时，会从常量池中获得对应的符号引用，再在类创建时运或者运行时解析、翻译到具体的内存地址中。</p>
+<p>常量池的每一项都是一个表，而且目前共有17中不同类型的常量，所以常量池是最繁琐的数据，这部分内容会在下一篇中单独介绍。</p>
+<h2 id="访问标志access_flags">访问标志(access_flags)</h2>
+<p>紧接着常量池的是访问标志，占用两个字节，这个标志用于识别一些类或者接口的访问信息，例如，这个class是类还是接口，是否是public，是否为abstract，是否被声明为final，是否是注解，是否是枚举，是否是非用户产生的class，是否是模块，等等。</p>
+<h2 id="类索引-父类索引和接口索引集合">类索引、父类索引和接口索引集合</h2>
+<p>类索引（this_class）和父类索引(super_class)都是一个u2类型的数据，接口索引集合（interfaces）则是以组u2类型的数据的集合，class文件中由着三项数据来确定类的继承关系。类索引用于确定这个类的全限定名，父类索引用于确定这个父类的全限定名，接口索引集合就是用来描述这个类实现了哪些接口。</p>
+<p>对于接口索引集合，入口的第一个u2类型的数据为接口计数器，表示索引表的容量。</p>
+<p>通过索引的值，到常量池中查找对应类的全限定名。</p>
+<h2 id="字段表集合field_info">字段表集合(field_info)</h2>
+<p>字段表用于描述接口或类中声明的变量（不包括方法内部声明的局部变量）。对一个字段的描述包括，作用域（public，private，protected），是类级还是实例级变量（static），是否可变（final），并发可见性（volatile），是否可被序列化（transient修饰符），字段数据类型（基本类型、对象、数组），字段名称。 其中，各种修饰符是否存在都可以用布尔值来表示，刚好可以采用标志位的方式来存储。而字段名，字段被定义为什么类型是无法固定的，所以只能引用常量池中的常量来描述。字段表的结构如下<br>
+<img src="https://gaoliang.me/post-images/1584158429668.png" alt="" loading="lazy"><br>
+其中字段修饰符（access_flags）是一个u2类型的数据结构，通过标志位的方式来实现对字段修饰符是否存在的表示。<br>
+<img src="https://gaoliang.me/post-images/1584158539555.png" alt="" loading="lazy"></p>
+<p>access_flags后是name_index和descriptor_index，都是对常量池项的引用，分别代表字段的简单名称以及字段和方法的描述符。</p>
+<p>全限定名把类全名中的<code>.</code>替换为<code>/</code>, 简单名称是指的没有类型和参数修饰符的方法或者字段名称，例如<code>inc()</code>方法和<code>m</code>字段的简单名称就是&quot;inc&quot;和&quot;m&quot;。</p>
+<p>相较于简单名，方法和字段的描述符则较为复杂，描述符的作用是来描述字段的数据类型、方法的参数列表（包括数量，类型和顺序）以及返回值。 根据描述符的规定，基本数据类型(byte、char、double、float、int、long、short、boolean)以及代表无返回值的void类型都是用一个大写字符来表示，而对象类型则用字符<code>L</code>加对象的全限定名来表示。</p>
+<figure data-type="image" tabindex="1"><img src="https://gaoliang.me/post-images/1584158911864.png" alt="" loading="lazy"></figure>
+<p>对于数组类型，每个维度前使用一个前置的<code>[</code>来描述。</p>
+<p>用描述符描述方法时，按照先参数列表，后返回值的顺序描述，参数列表按照参数的严格顺序放在一组小括号中，然后是返回值，例如：方法<code>int indexOf(char[]source，int sourceOffset，int sourceCount，char[]target，int targetOffset，int targetCount，int fromIndex)</code>的描述符为“([CII[CIII)I”。</p>
+<p>字段表结束后，还有一个属性表集合，用于存储一些额外的信息，例如果将字段m的声明改为“final static int m=123；”，那就可能会存在一项名称为ConstantValue的属性，其值指向常量123。</p>
+<p>字段表不会列出从父类或者父接口中继承而来的字段，但是可能会出现原本Java代码中不存在的字段，例如在内部类中为了保持对外部类的访问性，会自动添加对指向外部类实例的字段。</p>
+<h2 id="方法表集合">方法表集合</h2>
+<p>方法表集合和字段表集合的内容几乎一致，依次包括访问标志（access_flags）、名称索引（name_index）、描述符索引（desciptor_index）、属性表集合（attributes）几项。</p>
+<p>由于方法和字段修饰符的不同，所以访问标记的含义也略有不同</p>
+<figure data-type="image" tabindex="2"><img src="https://gaoliang.me/post-images/1584159904681.png" alt="" loading="lazy"></figure>
+<p>至此，方法的定义就可以通过访问标志、名称索引、描述符索引来表达清楚了，但是方法里面的代码去哪了呢？ 方法里的Java代码，在经过javac编译器编译为字节码指令之后，存放在方法属性表集合中的一个<code>Code</code>的属性中，属性表经常作为class文件中最具扩展性的一种数据项目。</p>
+<p>与字段表集合相对应的，如果父类方法在子类中没有被重写(Override)，方法表集合中就不会出现来自父类的方法信息，但同样的，也有可能会出现由编译器自动添加的方法，最常见的边是类构造器<code>&lt;clinit&gt;()</code>和实例构造器<code>&lt;init&gt;()</code>方法。</p>
+<p>Java方法中，重载(Overload)一个方法，要求其简单名相同之外，害要求必须拥有一个与原方法不同的特征签名，特征签名是指一个方法中各个参数在常量池中的字符引用的集合，也正是因此，返回值不包含在特征签名中。</p>
+<h2 id="属性表集合">属性表集合</h2>
+<p>属性表（attribute_info）在前面的讲解中已经出现过多次，class文件、字段表、方法表都可以由自己写带的属性表集合，以描述某些场景专有的信息。虚拟机规范对属性表的限制稍微宽松一些，不要求各个属性具有严格顺序，而且只要不与已有属性崇明，任何人实现的编译其都可以向属性表中写入自己定义的属性信息，Java虚拟机运行时，会忽略它不认识的属性。</p>
+<p>对于每一个属性，他的名称都要从常量池中引用一个CONSTANT_Utf8_info类型的常量来表示，而属性值的结构是完全自定义的，只需要通过一个u4长度属性来表明属性值所占用的位数即可。<br>
+<img src="https://gaoliang.me/post-images/1584160830127.png" alt="" loading="lazy"></p>
+<p>对于属性表详细的解释，会在下一篇中进行介绍。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-内存划分]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/">
+        </link>
+        <updated>2020-03-13T15:10:49.000Z</updated>
+        <content type="html"><![CDATA[<p>jvm运行时会把内存分为多个数据区域，根据《java虚拟机规范》规定，可以划分为方法区，堆，虚拟机栈，本地方法栈和程序计数器，其中方法区和堆是所有线程所共享的，其他则是每个线程隔离的。<br>
+<img src="https://gaoliang.me/post-images/1584113372648.png" alt="" loading="lazy"></p>
+<h2 id="程序计数器">程序计数器</h2>
+<p>其中记录的是当前所执行的字节码的行号，字节码解释就是通过改变这个计数器来完成包括分支、跳转、循环、异常、线程恢复等基本功能的。当线程执行的是 本地方法时，这个计数器的值为空。 这个区域是《java虚拟机规范》中唯一一个没有规定OOM情况的区域。</p>
+<h2 id="java虚拟机栈">Java虚拟机栈</h2>
+<p>每个Java方法被执行时，虚拟机都会同步创建一个栈帧，用于存储局部变量表，操作数栈，动态链接，方法出口等信息，一个方法被调用到执行结束的过程，也就对应着栈帧从入栈到出栈的过程。</p>
+<p>《java虚拟机规范》规定这个区域会存在两种一场，栈深度大于虚拟机允许深度时，抛出StackOverFlowError，如果栈容量可以动态扩展，则当无法扩展时，抛出OOM异常。我们常用的HotSpot虚拟机栈容量是不会动态扩展的，但是这并不意味着就不会抛出OOM异常，如果线程申请栈空间失败了，也是会抛出OOM的。</p>
+<h2 id="本地方法栈">本地方法栈</h2>
+<p>和Java虚拟机栈类似，只是执行的是本地方法，虚拟机规范没有堆这一部分有强制规定，有些虚拟机（例如HotSpot直接把Java虚拟机栈和本地方法栈合并了）</p>
+<h2 id="java堆">Java堆</h2>
+<p>堆的唯一目的就是存放对象实例。其内部结构并没有进一步的细致划分，我们常说的新生代，老年代，永久代，Eden，Survivor等都是一部分垃圾收集器的设计风格，和虚拟机规范乃至虚拟机实现没有关系。</p>
+<p>从分配对象的角度看，所有线程共享的Java堆可以划分出多个线程私有的分配缓冲区（Thread Local Allocation Buffer, TLAB）用于提升对象分配的效率。 当Java堆中没有空间完成实例分配，而且堆的大小也没法继续扩展时，虚拟机会抛出OOM异常。</p>
+<h2 id="方法区">方法区</h2>
+<p>方法区和堆一样，也是各个线程共享的内存区域，这个区域用于存储已被虚拟机加载的类型信息、常量、静态变量、即时编译器（JIT）编译后的代码缓存等数据。Java虚拟机规范中，把方法区描述为堆的一个逻辑部分，但是他取有一个别名“非堆”（Non-Heap）。<br>
+说到方法区，就要提到“永久代”的概念，在JDK8以前，由于HotSpot虚拟机的流行，很多人直接把方法区称之为“永久代”，这种说法是错误的，仅仅是因为在当时HotSpot设计选择把垃圾回收分代的设计扩展到了方法区，或者说，是使用“永久代”来实现了方法区。 原则上，如何设计和实现方法区，Java虚拟机规范并没有要求。在JDK8时，HotSpot虚拟机已经完全抛弃了永久代的概念，改用在本地内存中实现的原空间（Meta Space）来代替。<br>
+Java虚拟机规范要求，当方法去无法满足新内存分配需求的时候，会抛出OOM</p>
+<h3 id="运行时常量池">运行时常量池</h3>
+<p>运行时常量池是方法区的一部分，Class文件中，除了类的版本、字段、方法、接口等描述信息外，还有一项是常量池表，用于存放在编译期间产生的各种字面量和符号引用，这部分内容会在类加载后存放到方法区的运行时常量池中。 Java虚拟机规范堆class文件的每个部分的格式都有要求，例如每个字节用于存储什么数据。 但是，对于运行时常量池，规范并没有给出细节的要求，所以不同的虚拟机实现会按照自己的设计来实现这个区域，一般来说，除了保存Class文件中的符号引用外，还会把由符号引用翻译而来的直接引用也存储到这个运行时常量池中来。</p>
+<p>运行时常量池的一个特点是具有动态性，并不要求常量必须在编译期产生，所以并非只有class文件常量池中的内容可以放入运行时常量池，也可以在运行期间放入新的常量，例如String类的intern()方法。</p>
+<h2 id="直接内存">直接内存</h2>
+<p>首先要注意，直接内存并不属于虚拟机运行时数据区的一部分，也不是虚拟机规范规定的内存区域，但是这一部分也会被频繁使用，也有可能导致OOM。</p>
+]]></content>
+    </entry>
+    <entry>
         <title type="html"><![CDATA[Java 日志系统梳理]]></title>
-        <id>https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li</id>
-        <link href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li">
+        <id>https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/</id>
+        <link href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/">
         </link>
         <updated>2019-10-19T07:36:28.000Z</updated>
         <content type="html"><![CDATA[<p><img src="https://gaoliang.me/post-images/1571471023093.png" alt="slf4j 桥接传统日志系统" loading="lazy"><br>
@@ -22,8 +333,8 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[代理软件的代理模式介绍]]></title>
-        <id>https://gaoliang.me/post/ssr-v2ray-proxy-analysis</id>
-        <link href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis">
+        <id>https://gaoliang.me/post/ssr-v2ray-proxy-analysis/</id>
+        <link href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/">
         </link>
         <updated>2019-09-10T08:47:51.000Z</updated>
         <content type="html"><![CDATA[<p>常用的代理软件，通常会有系统代理模式、PAC、代理规则等多项设置，这些设置通常都十分相近，容易混淆，所以做一次简单的梳理。<br>
@@ -53,8 +364,8 @@ ssr-csharp，shadowsocks-windows<br>
     </entry>
     <entry>
         <title type="html"><![CDATA[我与我的利器]]></title>
-        <id>https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset</id>
-        <link href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset">
+        <id>https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/</id>
+        <link href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/">
         </link>
         <updated>2019-07-26T10:11:17.000Z</updated>
         <content type="html"><![CDATA[<p>从 <a href="http://gridea.dev">Gridea</a>（一个静态博客写作客户端）作者<a href="https://fehey.com">海岛心hey</a>的博客看到<a href="https://liqi.io/community/">利器社群计划</a>后，感觉很有意思，自己也写了一篇，但是说来惭愧，自己算不上创造者，没有什么拿的出手的作品，就单纯的分享下自己的一些内容吧，当作本博客的「关于」也好。</p>
@@ -133,8 +444,8 @@ ssr-csharp，shadowsocks-windows<br>
     </entry>
     <entry>
         <title type="html"><![CDATA[Java学习-类]]></title>
-        <id>https://gaoliang.me/post/java-class-learn</id>
-        <link href="https://gaoliang.me/post/java-class-learn">
+        <id>https://gaoliang.me/post/java-class-learn/</id>
+        <link href="https://gaoliang.me/post/java-class-learn/">
         </link>
         <updated>2018-04-24T02:06:04.000Z</updated>
         <content type="html"><![CDATA[<h2 id="1-实现一个类">1. 实现一个类</h2>
@@ -422,248 +733,6 @@ public class ClassRoom {
 }
 </code></pre>
 <p>去掉了 static， 出现了本质区别， 此时的 Student 类是知道自己所属于的 ClassRoom 实例的，并且可以使用<code>OutClass.this</code>获取外部类实例的引用。</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Redis 常用 API 总结]]></title>
-        <id>https://gaoliang.me/post/redis-commonly-used-apis</id>
-        <link href="https://gaoliang.me/post/redis-commonly-used-apis">
-        </link>
-        <updated>2018-04-15T12:29:24.000Z</updated>
-        <content type="html"><![CDATA[<h2 id="常用基本命令">常用基本命令</h2>
-<ul>
-<li><code>keys [pattern]</code> 所有满足pattern的key，一般不用 O(n)</li>
-<li><code>dbsize</code> 所有key的总数 O(1)</li>
-<li><code>exists key</code> 检查key是否存在 O(1)</li>
-<li><code>del key</code> 删除指定的key-value，可以删除多个 O(1)</li>
-<li><code>expire key seconds</code> 设置key在seconds秒之后过期 O(1)</li>
-<li><code>ttl key</code> 查询key剩余的过期时间 O(1)</li>
-<li><code>persist key</code> 去掉过期时间，不再过期 O(1)</li>
-<li><code>type key</code>  返回key的类型[string hash list set zset none] O(1)</li>
-</ul>
-<h2 id="数据结构api">数据结构API</h2>
-<p>redis 对外的数据类型有 string，hash，list，set，sorted set，但对于同一种数据类型的不同键值对，其内部的编码方式可能不同。 我们可以用<code>OBJECT ENCODING key</code> 命令来查看对应的key的内部编码方式。</p>
-<h3 id="string-字符串">string 字符串</h3>
-<p>字符串类型的结构： key -&gt; value<br>
-内部编码包括 raw, int, embstr<br>
-常用API：</p>
-<ul>
-<li><code>get key</code> 获取key的value</li>
-<li><code>getrange key start end</code> 获取子串</li>
-<li><code>mget key1 key2 key3</code>  批量获取，为原子操作</li>
-<li><code>set key value</code> 设置key为value</li>
-<li><code>setnx key value</code> 当key不存在时，设置key为value</li>
-<li><code>set key value xx</code> 当key存在时才设置</li>
-<li><code>setrange key index value</code> 指定下标设置一个新的值</li>
-<li><code>mset key1 value1 key2 value2</code> 批量设置值</li>
-<li><code>getset key newvalue</code> 返回旧值并设置新值</li>
-<li><code>append key value</code> 追加字符串</li>
-<li><code>strlen key</code> 获取value的长度（字节数）O(1) 可得内部其实记录了字符串的长度。</li>
-<li><code>del key</code> 删除</li>
-<li><code>incr key</code>  +1</li>
-<li><code>decr key</code> -1</li>
-<li><code>incrby key k</code> +k</li>
-<li><code>decrby key k</code> -k</li>
-</ul>
-<h3 id="hash-哈希">hash 哈希</h3>
-<p>hash类型的结构: key==&gt;{filed1: value1 field2: value2 ... }  可以看做是一个关系型数据库的一张表，虽然不太恰当</p>
-<p>特点： 其实像是个small redis，或者map map。 注意filed不能相同，value可以相同。</p>
-<p>内部编码包括 hashtable, ziplist</p>
-<p>常用API</p>
-<ul>
-<li><code>hget key field</code> 获取hash key的field字段值</li>
-<li><code>hmget key field1 field2 field3...</code> 一次获取多个filed的值</li>
-<li><code>hset key field value</code> 设置hash key的filed字段值为value</li>
-<li><code>hmset key field1 value1 filed2 value2 ...</code> 一次设置多个值</li>
-<li><code>hdel key field</code> 删除</li>
-<li><code>hexists key field</code> 判断hash key是否有field</li>
-<li><code>hlen key</code> 获取hash key有多少个字段</li>
-<li><code>hgetall key</code> 获取key中所有对应的field和value PS. 小心使用下面这三个命令</li>
-<li><code>hvals key</code> 返回hash key中所有field的values</li>
-<li><code>hkeys key</code> 返回hash key对应的所有的field</li>
-</ul>
-<p>可以发现，很多的API都是可以和string类型对应起来的，很多时候只是加了个h</p>
-<h3 id="list-列表">list 列表</h3>
-<p>list类型的结构: key==&gt;elements[a,b,c,...]<br>
-特点： 有序，可重复，双端操作<br>
-内部编码：linkedlist, ziplist<br>
-常用API:</p>
-<ul>
-<li><code>rpush key value1 value2 ...</code> 从右端插入值,同样还有<code>lpush</code></li>
-<li><code>rpop key</code> 从列表右端弹出一个item,同样的还有<code>lpop</code></li>
-<li><code>linsert key before|after value newValue</code> 在list的指定值前插入newValue</li>
-<li><code>lrem key count value</code>  根据count值，从列表中删除所有value相等的项，如果count&gt;0 则从左到右删除， 如果count&lt;0 则从右往左删，如果count=0，则删除全部value值</li>
-<li><code>lrange key start end</code> 获取列表指定索引范围内的所有item，注意包含end，且支持负索引</li>
-<li><code>ltrim key start end</code> 按照索引范围修剪列表</li>
-<li><code>llen key</code> 获取列表的长度</li>
-<li><code>lset key index newValue</code> 设置列表指定索引值为newValue</li>
-<li><code>brpop key timeout</code> 在没有元素时，阻塞直到有元素能够pop，类似的还有<code>blpop</code>,在做消息队列的时候会很有用</li>
-</ul>
-<h3 id="set-集合">set 集合</h3>
-<p>set类型的结构 key==&gt; {a,b,c,d}<br>
-特点：无序，不可重复，支持集合间操作<br>
-内部编码：hashtable intset</p>
-<h4 id="集合内的api">集合内的API：</h4>
-<ul>
-<li><code>sadd key element1 element2 ...</code> 添加元素，如果存在则添加失败 O(1)</li>
-<li><code>srem key element1 element2 ...</code> 移除元素 O(1)</li>
-<li><code>scard key</code> 计算集合的大小</li>
-<li><code>sismember key element</code> 判断是否在集合中</li>
-<li><code>srandmember key count</code> 从集合中随机挑选count个元素，不会破坏集合</li>
-<li><code>spop key</code> 从集合中随机弹出一个元素，注意是弹出，元素就从集合中移除了</li>
-<li><code>smembers key</code> 所有元素，注意可能会导致阻塞，小心使用</li>
-</ul>
-<h4 id="集合间的api">集合间的API</h4>
-<ul>
-<li><code>sdiff key1 key2</code> 获取差集</li>
-<li><code>sinter key1 key2</code> 获取交集</li>
-<li><code>sunion key1 key</code> 获取并集</li>
-</ul>
-<h3 id="sorted-set-zset-有序集合">sorted set (zset) 有序集合</h3>
-<p>set类型的结构 key==&gt; {score1:value1, score2:value2, ...}<br>
-特点：有序，不可重复<br>
-内部编码：skiplist ziplist<br>
-常用API:</p>
-<ul>
-<li><code>zadd key score element</code> 注意score可以重复，但element不可以重复,时间复杂度为O(logN)</li>
-<li><code>zrem key element</code> 删除，复杂度为O(1)</li>
-<li><code>zscore key elment</code> 获取score</li>
-<li><code>zincrby key increSocre elemnt</code> 增加指定元素的score</li>
-<li><code>zcard key</code> 获取元素个数 时间复杂度为O(1)</li>
-<li><code>zrank key element</code> 获取元素的排名</li>
-<li><code>zrange key start end [WITHSCORES]</code> 返回指定排名范围的元素，并指定是否返回分数，时间复杂度为O(log(n) + m)</li>
-<li><code>zrangebyscore key start end [WITHSCORES]</code> 返回指定score范围的元素，并指定是否返回分数，时间复杂度为O(log(n) + m)</li>
-<li><code>zount key minScore maxScore</code> 返回指定score范围的元素个数，时间复杂度为O(log(n) + m)</li>
-<li><code>zremrangebyrank key start end</code> 删除指定排名范围的元素 时间复杂度为O(log(n) + m)</li>
-<li><code>zremrangebyscore key start end</code> 删除指定score范围的元素 时间复杂度为O(log(n) + m)</li>
-</ul>
-<h2 id="一些问题">一些问题</h2>
-<h3 id="为什么单线程还这么快">为什么单线程还这么快？</h3>
-<ol>
-<li>纯内存操作</li>
-<li>采用非阻塞IO, 内部io模型利用epoll并进行了优化</li>
-<li>没有线程的切换，没有线程切换和竞态消耗</li>
-</ol>
-<h3 id="怎样避免单线程导致的阻塞问题">怎样避免单线程导致的阻塞问题？</h3>
-<p>拒绝长慢命令，包括keys, flushall, flushdb等，不要在线上执行</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Redis 的持久化机制]]></title>
-        <id>https://gaoliang.me/post/how-redis-do-persistence</id>
-        <link href="https://gaoliang.me/post/how-redis-do-persistence">
-        </link>
-        <updated>2018-04-14T12:06:36.000Z</updated>
-        <summary type="html"><![CDATA[<p>Redis 的持久化（Persistence）机制可以有效避免 redis 服务器在遇到故障时数据丢失的问题，发生故障重启后重新载入持久化的内容就可以恢复数据。redis 有两种持久化机制 RDB 和 AOF。</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>Redis 的持久化（Persistence）机制可以有效避免 redis 服务器在遇到故障时数据丢失的问题，发生故障重启后重新载入持久化的内容就可以恢复数据。redis 有两种持久化机制 RDB 和 AOF。</p>
-<!-- more -->
-<h2 id="持久化的一些概念">持久化的一些概念</h2>
-<p>持久化一般有两种实现方式，一种是类似 MySQL 的 dump 命令的快照方式，这种方式每次调用会将数据库中的全部内容都一次性写入到硬盘中，恢复的时候也可以一次性将全部数据恢复出来。 另一种则是类似于 MySQL 的 Binlog 的方式，每当数据库内容更新时，记录下所有写操作的执行，恢复时，按照日志的顺序把所有的操作再执行一遍就可以恢复原来的数据。</p>
-<h2 id="rdbredis-database-快照方式">RDB（Redis DataBase) 快照方式</h2>
-<p>RDB 是利用快照实现的一种持久化技术，在 redis 中，内存中的数据经过 RDB 持久化后，会被保存到硬盘上的RDB二进制文件中，当我们需要恢复数据时，重新加载到内存中即可。 在进行快照时，如果系统中存在陈旧的快照，那么 RDB 会先新建快照，完成后再替换陈旧的快照。 每次持久化的时间复杂度为 O(n)。</p>
-<h3 id="rdb-的触发方式">RDB 的触发方式</h3>
-<h4 id="save-和-bgsave">save 和 bgsave</h4>
-<p>save 和 bgsave 都可以通过用户主动调用的方式来完成数据的持久化，区别是save 是一个同步命令，执行时会阻塞 redis 的主线程，而 redis 又是单进程单线程的，这就会导致 save 执行的过程中，其他的指令只能排队阻塞等待执行。 bgsave 则是通过 fork() 系统调用新建一个子进程在后台完成数据持久化任务，不会阻塞主线程。<br>
-他们的主要区别如下：</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>save</th>
-<th>bgsave</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>阻塞？</td>
-<td>是</td>
-<td>是(调用 fork() 时)</td>
-</tr>
-<tr>
-<td>优点</td>
-<td>不需要额外消耗内存</td>
-<td>不会阻塞客户端其他命令</td>
-</tr>
-<tr>
-<td>缺点</td>
-<td>需要阻塞，部分场景不允许</td>
-<td>fork消耗系统资源</td>
-</tr>
-</tbody>
-</table>
-<h4 id="自动触发">自动触发</h4>
-<p>redis 会根据配置文件自动触发 bgsave 命令完成数据的持久化，通常情况下在 redis.conf 文件中我们会看到下面这样的配置项</p>
-<pre><code>save 900 1
-save 300 10
-save 60 10000
-</code></pre>
-<p>save N M表示在 N 秒之内，redis 至少发生 M 次修改则 redis 抓快照到磁盘。 这个三条记录只要有一个满足要求就执行 bgsave 命令。一般项目中不启用自动触发</p>
-<h4 id="其他的触发方式容易忽略的">其他的触发方式（容易忽略的）</h4>
-<ul>
-<li>全量复制（如主从复制时）</li>
-<li>debug reload</li>
-<li>shutdown</li>
-</ul>
-<h2 id="aofappend-only-file-日志方式">AOF（Append Only File） 日志方式</h2>
-<p>RDB出现的问题：</p>
-<ol>
-<li>时间复杂度为O(n)，耗时耗性能</li>
-<li>不可控，丢失数据，只有固定的时间点的数据会被持久化</li>
-</ol>
-<p>AOF的原理： 其实就是记录每一条命令，不过是保存在专有的 AOF 格式。AOF 的写入几乎是实时的。</p>
-<h3 id="aof-的写入策略">AOF 的写入策略</h3>
-<p>从内存中将数据复制到硬盘扇区是一项较为耗时的操作，redis 的 AOF 为我们提供了三种决定写入时机的策略，分别是 always, everysec 和 no。</p>
-<h4 id="always-策略">always 策略</h4>
-<p>每次执行命令都会调用 fsync 将命令写入到日志文件中，大数据量时非常慢但是十分安全。这种方式 IO 开销很大，对于一般的 sata 盘只有几百 TPS。</p>
-<h4 id="everysec-策略">everysec 策略</h4>
-<p>每秒将 redis 缓冲区中缓存的命令调用 fsync 写入到 aof 日志文件中，速度快了很多但是可能会丢失最近一秒的数据。</p>
-<h4 id="no-策略">no 策略</h4>
-<p>操作系统决定何时应该刷新，不可控</p>
-<h3 id="aof-重写">AOF 重写</h3>
-<p>当我们写入的命令很多之后，aof文件就会变得非常大，为了尽可能优化aof文件的大小，加快恢复的速度，会对aof文件进行重写。</p>
-<h4 id="aof-重写的两种方式">AOF 重写的两种方式</h4>
-<ol>
-<li>bgrewriteaof 命令（利用fork异步进行）</li>
-<li>自动重写，有两个配置项，auto-aof-rewrite-min-size，表示需要进行重写的尺寸和 auto-aof-rewrite-percentage，表示aof文件的增长率。同时满足两个条件时则 redis 会自动进行重写。</li>
-</ol>
-<h2 id="rdb-和-aof-的对比">RDB 和 AOF 的对比</h2>
-<table>
-<thead>
-<tr>
-<th>命令</th>
-<th>RDB</th>
-<th>AOF</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>恢复优先级</td>
-<td>低</td>
-<td>高</td>
-</tr>
-<tr>
-<td>体积</td>
-<td>小</td>
-<td>大</td>
-</tr>
-<tr>
-<td>恢复速度</td>
-<td>快</td>
-<td>慢</td>
-</tr>
-<tr>
-<td>数据安全性</td>
-<td>丢数据</td>
-<td>根据策略决定</td>
-</tr>
-<tr>
-<td>轻重</td>
-<td>重</td>
-<td>轻</td>
-</tr>
-</tbody>
-</table>
 ]]></content>
     </entry>
 </feed>

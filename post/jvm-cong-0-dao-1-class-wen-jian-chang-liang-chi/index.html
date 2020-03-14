@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hello Gridea | 高亮的杂货铺</title>
+<title>JVM从0到1-class文件常量池 | 高亮的杂货铺</title>
 <meta name="description" content="Happy coding!" />
 <link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1584181320081">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
@@ -96,54 +96,63 @@
         <div class="post-detail">
           <article class="post">
             <h2 class="post-title">
-              Hello Gridea
+              JVM从0到1-class文件常量池
             </h2>
             <div class="post-info">
               <span>
-                2018-12-12
+                2020-03-14
               </span>
               <span>
-                2 min read
+                3 min read
               </span>
               
-                <a href="https://gaoliang.me/tag/TJXhs69YH/" class="post-tag">
-                  # Gridea
+                <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+                  # JVM
+                </a>
+              
+                <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+                  # Java
                 </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://gaoliang.me/post-images/hello-gridea.png" alt="">
-            
             <div class="post-content-wrapper">
               <div class="post-content">
-                <p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-<!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="http://hvenotes.fehey.com/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>𝖶𝗂𝗇𝖽𝗈𝗐𝗌</strong> 或 <strong>𝖬𝖺𝖼𝖮𝖲</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
+                <p>常量池可以比喻为class文件里的资源仓库，他是class文件结构中与其他项目关联最多的数据，通常也是占据class文件空间最大的项目。</p>
+<p>由于常量池中的常量的数量是不固定的，所以在入口处需要防止一个u2类型的数据，代表常量池容量计数器。需要注意的是，这个计数器从1开始，而不是0，所以常量池计数器的值，实际表示的常量池中的常量数量+1。</p>
+<p>常量池中主要存放两种常量，字面量（Literal）和符号引用（Symbolic References)。字面量比较接近Java语言层面常量的概念，而符号引用则属于编译原理方面的概念，主要包括一下几种</p>
+<ul>
+<li>被模块导出或者开放的包（Package）</li>
+<li>类和接口的全限定名（Full Qualified Name）</li>
+<li>字段的名称和描述（Descriptor）</li>
+<li>方法的名称和描述</li>
+<li>方法句柄和方法类型（Method Handle，Method Type, Invoke Dynamic）</li>
+<li>动态调用点和动态常量（Dynamically-Computed Call Site、Dynamically-computed Constant）<br>
+Javac编译器没有连接这一个步骤，而是在虚拟机加载class文件时及逆行动态连接的，所以class文件中没有保存各个方法、字段在内存中的布局信息，这些字段、方法的引用是在虚拟机运行期间进行转换的。</li>
+</ul>
+<p>常量池中的每一个项目都是一个表，最初设计中只有11种，后续不断扩展，截至到JDK13，常量表中共有17中不同类型的常量。</p>
+<figure data-type="image" tabindex="1"><img src="https://gaoliang.me/post-images/1584163304921.png" alt="" loading="lazy"></figure>
+<p>这其中的每一种类型，都具有独立的结构，因此常量池的结构十分复杂。</p>
+<h2 id="constant_utf8_info">CONSTANT_Utf8_info</h2>
+<p><img src="https://gaoliang.me/post-images/1584163919336.png" alt="" loading="lazy"><br>
+legth说明这这个UTF-8编码的字符串长度是多少字节，他后面紧跟着的是长度为length个字节的UTF-8缩略编码的连续数据。 UTF-8缩略编码与普通UTF-8编码的区别是：从'\u0001'到'\u007f'之间的字符（相当于1～127的ASCII码）的缩略编码使用一个字节表示，从'\u0080'到'\u07ff'之间的所有字符的缩略编码用两个字节表示，从'\u0800'开始到'\uffff'之间的所有字符的缩略编码就按照普通UTF-8编码规则使用三个字节表示。</p>
+<p>由于class文件中方法和字段等都需要引用这个类型的常量来描述名称，所以这个常量的最大长度也就是Java中方法和字段的最大长度，u2，这也就意味着最大值为65535。所以这也意味着Java程序中变量和方法名的大小无法超过64KB。</p>
+<h2 id="constant_class_info">CONSTANT_Class_info</h2>
+<p><img src="https://gaoliang.me/post-images/1584169090290.png" alt="" loading="lazy"><br>
+这种常量表示一个类或者接口的符号引用，其中，name_index是常量池的索引，指向一个常量池中的CONSTANT_Utf8_info类型常量，代表了这个类的全限定名。在字段表、方法表、和属性表中，会引用常量表中的符号引用来进行表达。</p>
+<h2 id="其他字段结构">其他字段结构</h2>
+<p><img src="https://gaoliang.me/post-images/1584169300526.png" alt="" loading="lazy"><br>
+<img src="https://gaoliang.me/post-images/1584169307922.png" alt="" loading="lazy"><br>
+<img src="https://gaoliang.me/post-images/1584169312061.png" alt="" loading="lazy"></p>
 
               </div>
               <div class="toc-container">
                 <ul class="markdownIt-TOC">
 <li>
 <ul>
-<li><a href="#%E7%89%B9%E6%80%A7">特性👇</a></li>
+<li><a href="#constant_utf8_info">CONSTANT_Utf8_info</a></li>
+<li><a href="#constant_class_info">CONSTANT_Class_info</a></li>
+<li><a href="#%E5%85%B6%E4%BB%96%E5%AD%97%E6%AE%B5%E7%BB%93%E6%9E%84">其他字段结构</a></li>
 </ul>
 </li>
 </ul>
@@ -153,6 +162,15 @@
           </article>
         </div>
 
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/">
+              <h3 class="post-title">
+                JVM从0到1-class文件结构初探
+              </h3>
+            </a>
+          </div>
         
 
         

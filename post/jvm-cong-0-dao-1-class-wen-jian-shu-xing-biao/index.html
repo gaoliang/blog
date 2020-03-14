@@ -1,0 +1,254 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JVM从0到1-class文件属性表 | 高亮的杂货铺</title>
+<meta name="description" content="Happy coding!" />
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1584181320081">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111489730-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-111489730-2');
+</script>
+
+
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://gaoliang.me">
+  <img class="avatar" src="https://gaoliang.me/images/avatar.png?v=1584181320081" alt="">
+  </a>
+  <h1 class="site-title">
+    高亮的杂货铺
+  </h1>
+  <p class="site-description">
+    Happy coding!
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="https://gaoliang.me/post/experiments" class="menu">
+          试验田
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/gaoliang" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://twitter.com/im_sorghum" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              JVM从0到1-class文件属性表
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-03-14
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+                <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
+                  # JVM
+                </a>
+              
+                <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
+                  # Java
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>属性表（attribute_info）在前面的讲解中已经出现过多次，class文件、字段表、方法表都可以由自己携带的属性表集合，以描述某些场景专有的信息。虚拟机规范对属性表的限制稍微宽松一些，不要求各个属性具有严格顺序，而且只要不与已有属性崇明，任何人实现的编译其都可以向属性表中写入自己定义的属性信息，Java虚拟机运行时，会忽略它不认识的属性。</p>
+<!-- more -->
+<p>对于每一个属性，他的名称都要从常量池中引用一个CONSTANT_Utf8_info类型的常量来表示，而属性值的结构是完全自定义的，只需要通过一个u4长度属性来表明属性值所占用的位数即可。<br>
+<img src="https://gaoliang.me/post-images/1584160830127.png" alt="" loading="lazy"></p>
+<p>截止到Java虚拟机规范的Java SE 12版本，预定义的属性项已经增加到了29项。详细见后面的表格</p>
+<h2 id="code属性">Code属性</h2>
+<p>Java程序的方法体经过Javac编译器处理后，最终转换为字节码存储在Code属性中，Code属性出现在方法表中的属性集合之中，但并非所有的方法表都必须有这个属性，比如接口和抽象类中的方法，就不存在Code属性，如果方法表有Code属性存在，那么他的结构如下<br>
+<img src="https://gaoliang.me/post-images/1584169843802.png" alt="" loading="lazy"><br>
+其中，第一个u2 attriibute_name_index，指向了常量池中的一个utf8类型常量的索引，此常量固定值为Code，attribute_length表示了属性值的长度。</p>
+<p>max_stack代表了操作数栈深度的最大值，在方法执行的任意时刻，操作数栈都不会超过这个深度，虚拟机在运行时根据这个值来分配栈帧中的操作树栈深度。</p>
+<p>max_locals代表了局部变量表所需的存储空间，在这里，max_locals的单位是槽(slot)，变量槽是虚拟机为局部变量分配内存的最小单位，对于byte、char、float、int、short、boolean和returnAddress等长度不超过32位的数据类型，每个局部变量占用一个变量槽，而double和long这种64位的数据类型则需要两个变量槽。 方法参数（包括实例方法中隐含的this）、显示异常处理程序的参数（在catch中定义的异常值）、方法体中定义的局部变量都依赖局部变量表来存放。  但是要注意，并不是方法中有多少个局部变量，就把这些局部变量表所占空间之和作为max_locals的值，操作数栈和局部变量表决定了一个方法的栈帧大小，不必要的数量会导致内存的浪费。 Java虚拟机的做法是将局部变量表的局部变量池进行重用，当代码执行超过一个局部变量的作用域时，这个局部变量所占用的局部变量槽可以被其他局部变量使用，javac编译器会根据变量的作用域来分配变量槽来给各个变量使用，然后根据同时生存的最大局部变量数和类型来计算出max_locals的大小。</p>
+<p>code_length和code用来存储Java源程序编译后产生的字节码指令，code_length代表字节码长度，code是用于存储字节码指令的一系列字节流。虽然code_length是一个u4类型的长度值，也就是理论上可以达到2的32次幂，但是根据java虚拟机规范，一个方法不允许超过65535条字节码指令，即实际值使用到了u2的长度。</p>
+<p>在字节码指令之后的是显式异常处理表，异常表对于Code属性来说并不是必须存在的。其结构如图<br>
+<img src="https://gaoliang.me/post-images/1584171878583.png" alt="" loading="lazy"><br>
+字段的含义为，当字节码从start_pc行到end_pc行之间出现了类型为catch_type或者其子类的异常时，则转到第handler_pc行继续处理。 当catch_type的值为0时，代表任意异常情况都需要转到handler_pc行进行处理。</p>
+<h2 id="exceptions属性">Exceptions属性</h2>
+<p>这个Exceptions属性是方法表中与Code属性同级的一项属性。作用是列举一个方法可能抛出的受检查异常（Checked Exceptions），也就是方法描述时，throws关键字后面列举的异常，其结构如下图<br>
+<img src="https://gaoliang.me/post-images/1584173316961.png" alt="" loading="lazy"><br>
+其中exception_index_table指向了常量池中CONSTANT_Class_info的索引。</p>
+<h2 id="linenumbertable属性">LineNumberTable属性</h2>
+<p>LineNumberTable属性是用于描述Java源代码行号和字节码行号之间关系的。他不是运行时必须的，可以通过javac的参数 -g参数进行取消或生成。 如果取消这个属性，最大的影响就是在运行时抛出的异常不会包含报错行号，在调试程序时也无法根据源码行号来设置断点。</p>
+<h2 id="localvariabletable和localvariabletypetable属性">LocalVariableTable和LocalVariableTypeTable属性</h2>
+<p>LocalVariableTable属性是用来描述栈帧中局部变量表的变量与java源码中定义的变量之间的关系，也不是运行时必须的属性，如果不生成，最大的影响是对IDE工具调试时无法根据参数名从上下文中获取参数值。</p>
+<p>在JDK5引入泛型后，LocalVariableTable属性增加了一个姐妹属性，LocalVariableTypeTable，其结构与LocalVariableTable很相似，仅仅是把描述字段的字段描述符替换成了字段的特征签名。由于描述符中泛型参数化类型被擦除，描述符不能准确描述泛型类型了，因此出现了LocalVariableTypeTable属性，使用特征签名来完成泛型的描述。</p>
+<h2 id="附录-预定义属性列表">附录 预定义属性列表</h2>
+<p><img src="https://gaoliang.me/post-images/1584173919837.png" alt="" loading="lazy"><br>
+<img src="https://gaoliang.me/post-images/1584173926306.png" alt="" loading="lazy"></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#code%E5%B1%9E%E6%80%A7">Code属性</a></li>
+<li><a href="#exceptions%E5%B1%9E%E6%80%A7">Exceptions属性</a></li>
+<li><a href="#linenumbertable%E5%B1%9E%E6%80%A7">LineNumberTable属性</a></li>
+<li><a href="#localvariabletable%E5%92%8Clocalvariabletypetable%E5%B1%9E%E6%80%A7">LocalVariableTable和LocalVariableTypeTable属性</a></li>
+<li><a href="#%E9%99%84%E5%BD%95-%E9%A2%84%E5%AE%9A%E4%B9%89%E5%B1%9E%E6%80%A7%E5%88%97%E8%A1%A8">附录 预定义属性列表</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/">
+              <h3 class="post-title">
+                JVM从0到1-class文件常量池
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+
+          
+            <link rel="stylesheet" href="https://unpkg.com/disqusjs@1.1/dist/disqusjs.css">
+<script src="https://unpkg.com/disqusjs@1.1/dist/disqus.js"></script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+var options = {
+  shortname: 'gao-liang-de-za-huo-pu',
+  apikey: 'yetuLkolNo1SQ1c6oRQdEdOLdIpLHymjVOvj23cvFTFwbgwBpfjtGTHKmsSlwdfl',
+}
+if ('') {
+  options.api = ''
+}
+var dsqjs = new DisqusJS(options)
+
+</script>
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | 
+  <a class="rss" href="https://gaoliang.me/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+
+  let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+  // This should probably be throttled.
+  // Especially because it triggers during smooth scrolling.
+  // https://lodash.com/docs/4.17.10#throttle
+  // You could do like...
+  // window.addEventListener("scroll", () => {
+  //    _.throttle(doThatStuff, 100);
+  // });
+  // Only not doing it here to keep this Pen dependency-free.
+
+  window.addEventListener("scroll", event => {
+    let fromTop = window.scrollY;
+
+    mainNavLinks.forEach((link, index) => {
+      let section = document.getElementById(decodeURI(link.hash).substring(1));
+      let nextSection = null
+      if (mainNavLinks[index + 1]) {
+        nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+      }
+      console.log('section.offsetHeight', section.offsetHeight);
+      if (section.offsetTop <= fromTop) {
+        if (nextSection) {
+          if (nextSection.offsetTop > fromTop) {
+            link.classList.add("current");
+          } else {
+            link.classList.remove("current");    
+          }
+        } else {
+          link.classList.add("current");
+        }
+      } else {
+        link.classList.remove("current");
+      }
+    });
+  });
+
+</script>
+
+      </div>
+    </div>
+  </body>
+</html>
