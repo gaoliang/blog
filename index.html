@@ -1,424 +1,373 @@
-<html>
-  <head>
-    <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
 <title>高亮的杂货铺</title>
-<meta name="description" content="Happy coding!" />
-<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico?v=1584181320081">
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.7.2/animate.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/media/css/tailwind.css">
 <link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="高亮的杂货铺 - Atom Feed" href="https://gaoliang.me/atom.xml">
 
-<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+    
 
+  <meta name="description" content="Happy coding!" />
+</head>
+<body>
+  <div class="antialiased flex flex-col min-h-screen" id="app">
 
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111489730-2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-111489730-2');
-</script>
-
-
-  </head>
-  <body>
-    <div class="main">
-      <div class="main-content">
-        <div class="site-header">
-  <a href="https://gaoliang.me">
-  <img class="avatar" src="https://gaoliang.me/images/avatar.png?v=1584181320081" alt="">
-  </a>
-  <h1 class="site-title">
-    高亮的杂货铺
-  </h1>
-  <p class="site-description">
-    Happy coding!
-  </p>
-  <div class="menu-container">
-    
-      
-        <a href="/" class="menu">
-          首页
-        </a>
-      
-    
-      
-        <a href="/archives" class="menu">
-          归档
-        </a>
-      
-    
-      
-        <a href="/tags" class="menu">
-          标签
-        </a>
-      
-    
-      
-        <a href="https://gaoliang.me/post/experiments" class="menu">
-          试验田
-        </a>
-      
-    
-      
-        <a href="/post/about" class="menu">
-          关于
-        </a>
-      
-    
+    <div class="nav py-3 md:py-8 fixed w-full z-10 bg-gray-50 dark:bg-gray-700 transition-all duration-300" :class="{ 'scroll': scrolled }">
+  <div class="flex justify-end px-4">
+    <div class="w-8 h-8 flex justify-center items-center rounded-full md:hidden" @click="showMenu = !showMenu">
+      <i class="ri-close-line" v-show="showMenu"></i>
+      <i class="ri-menu-3-line" v-show="!showMenu"></i>
+    </div>
   </div>
-  <div class="social-container">
+  <nav class="max-w-4xl w-full mx-auto text-center flex flex-col md:flex-row justify-center md:block" :class="`${ showMenu ? 'block' : 'hidden' }`">
     
-      
-        <a href="https://github.com/gaoliang" target="_blank">
-          <i class="fab fa-github"></i>
-        </a>
-      
+      <a href="/" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        首页
+      </a>
     
-      
-        <a href="https://twitter.com/im_sorghum" target="_blank">
-          <i class="fab fa-twitter"></i>
-        </a>
-      
+      <a href="/archives" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        归档
+      </a>
     
-      
+      <a href="/tags" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        标签
+      </a>
     
-      
+      <a href="https://gaoliang.me/post/experiments" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        试验田
+      </a>
     
-      
+      <a href="/post/about" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        关于
+      </a>
     
-  </div>
+    <a href="https://gaoliang.me/atom.xml" target="_blank" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+      RSS
+    </a>
+  </nav>
 </div>
 
+    <div class="max-w-4xl w-full mx-auto ">
+      
+        <header class="flex py-16 md:py-32 mt-12 flex-col md:flex-row px-4 md:px-0 animated fadeIn">
+  <div class="flex-1 order-2 md:order-1 md:pr-16">
+    <div class="text-4xl font-bold text-center md:text-left">
+      高亮的杂货铺
+    </div>
+    <div class="text-xl text-gray-500 mt-4 text-center md:text-left">
+      Happy coding!
+    </div>
     
-        <div class="post-container">
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/">
-        <h2 class="post-title">JVM从0到1-类加载器</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2020-03-14
-        </span>
-        <span>
-          4 min read
-        </span>
+      <div class="mt-8 text-center md:text-left">
+        <a
+          href="/post/about" 
+          arget="_blank"
+          class="text-sm bg-yellow-50 dark:bg-indigo-500 dark:text-gray-700 font-semibold px-4 py-2 inline-block yellow-btn transition-fast rounded"
+        >？？？我是谁~</a>
+      </div>
+    
+    
+      <div class="mt-8 flex items-center">
         
-          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
-            # JVM
-          </a>
+          <div class="text-gray-500 mr-2">
+            Follow me 👉
+          </div>
         
-          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
-            # Java
-          </a>
+        
+          
+        
+          
+        
+          
+            
+              <a href="https://github.com/gaoliang" target="_blank" class="mr-2 w-8 h-8 inline-flex items-center justify-center text-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-fast">
+                <i class="ri-github-line"></i>
+              </a>
+            
+          
+        
+          
+            
+              <a href="https://twitter.com/im_sorghum" target="_blank" class="mr-2 w-8 h-8 inline-flex items-center justify-center text-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-fast">
+                <i class="ri-twitter-line"></i>
+              </a>
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
         
       </div>
+    
+  </div>
+  <div class="md:mx-8 flex-shrink-0 self-start rounded-full border-4 border-dotted border-transparent hover:border-yellow-50 p-2 w-32 h-32 order-1 md:order-2 mx-auto s3-dotted">
+    <img class="rounded-full object-cover" src="https://gaoliang.me/images/avatar.png?v=1584182640939" alt="高亮的杂货铺" width="100%" height="100%">
+  </div>
+</header>
       
-      <div class="post-abstract">
+
+      <div class="shadow-box bg-white dark:bg-gray-600 border-gray-300 rounded-none md:rounded-lg -mx-1 md:mx-0 md:px-0">
+        
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-类加载器
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
         <p>Java虚拟机设计团队有意把类加载阶段中的“通过一个类的全限定名来获取描述该类的二进制字节流”这个动作放到Java虚拟机外部去实现，以便让应用程序自己决定如何去获取所需的类。实现这个动作的代码被称为“类加载器”（Class Loader）。</p>
 
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/">
-        <h2 class="post-title">JVM从0到1-类加载机制</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2020-03-14
-        </span>
-        <span>
-          8 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
-            # JVM
-          </a>
-        
-          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
-            # Java
-          </a>
-        
       </div>
-      
-        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi.png')">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-类加载机制
         </a>
-      
-      <div class="post-abstract">
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
         <p>一个类型从被加载到虚拟机内从中，到卸载出内存，整个生命周期会经历加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initilization）、使用（Using）和卸载（Unloading）七个阶段，其中验证、准备、解析三个阶段被统称为连接（Linking）</p>
 
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-shu-xing-biao/">
-        <h2 class="post-title">JVM从0到1-class文件属性表</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2020-03-14
-        </span>
-        <span>
-          5 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
-            # JVM
-          </a>
-        
-          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
-            # Java
-          </a>
-        
       </div>
-      
-      <div class="post-abstract">
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+      <img class="flex-shrink-0 self-start md:ml-4 mb-4 md:mb-0 rounded-sm object-cover featured-img order-1 md:order-2 w-full h-40 md:w-56 md:h-32" loading="lazy" src="https://gaoliang.me/post-images/jvm-cong-0-dao-1-lei-jia-zai-ji-zhi.png" alt="JVM从0到1-类加载机制">
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-shu-xing-biao/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-class文件属性表
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
         <p>属性表（attribute_info）在前面的讲解中已经出现过多次，class文件、字段表、方法表都可以由自己携带的属性表集合，以描述某些场景专有的信息。虚拟机规范对属性表的限制稍微宽松一些，不要求各个属性具有严格顺序，而且只要不与已有属性崇明，任何人实现的编译其都可以向属性表中写入自己定义的属性信息，Java虚拟机运行时，会忽略它不认识的属性。</p>
 
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/">
-        <h2 class="post-title">JVM从0到1-class文件常量池</h2>
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-shu-xing-biao/" class="btn">
+        Read more
       </a>
-      <div class="post-info">
-        <span>
-          2020-03-14
-        </span>
-        <span>
-          3 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
-            # JVM
-          </a>
-        
-          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
-            # Java
-          </a>
-        
-      </div>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/">
-        <h2 class="post-title">JVM从0到1-class文件结构初探</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2020-03-14
-        </span>
-        <span>
-          9 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
-            # JVM
-          </a>
-        
-          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
-            # Java
-          </a>
-        
-      </div>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/">
-        <h2 class="post-title">JVM从0到1-内存划分</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2020-03-13
-        </span>
-        <span>
-          5 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/jvm/" class="post-tag">
-            # JVM
-          </a>
-        
-          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
-            # Java
-          </a>
-        
-      </div>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/">
-        <h2 class="post-title">Java 日志系统梳理</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2019-10-19
-        </span>
-        <span>
-          0 min read
-        </span>
-        
-      </div>
-      
-        <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/java-ri-zhi-xi-tong-shu-li.jpg')">
-        </a>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/">
-        <h2 class="post-title">代理软件的代理模式介绍</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2019-09-10
-        </span>
-        <span>
-          4 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/UIik0Mktx/" class="post-tag">
-            # 其他
-          </a>
-        
-      </div>
-      
-        <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/ssr-v2ray-proxy-analysis.jpg')">
-        </a>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/">
-        <h2 class="post-title">我与我的利器</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2019-07-26
-        </span>
-        <span>
-          5 min read
-        </span>
-        
-      </div>
-      
-        <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/talking-about-me-and-my-favorite-toolset.jpg')">
-        </a>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-    <article class="post">
-      <a href="https://gaoliang.me/post/java-class-learn/">
-        <h2 class="post-title">Java学习-类</h2>
-      </a>
-      <div class="post-info">
-        <span>
-          2018-04-24
-        </span>
-        <span>
-          9 min read
-        </span>
-        
-          <a href="https://gaoliang.me/tag/i6PatO6w0/" class="post-tag">
-            # Java
-          </a>
-        
-      </div>
-      
-        <a href="https://gaoliang.me/post/java-class-learn/" class="post-feature-image" style="background-image: url('https://gaoliang.me/post-images/java-class-learn.jpeg')">
-        </a>
-      
-      <div class="post-abstract">
-        
-      </di>
-    </article>
-  
-</div>
-
-    
-        <div class="pagination-container">
-  
-  
-    <a href="https://gaoliang.me/page/2" class="prev-page">下一页</a>
-  
-</div>
-
-    
-        <div class="site-footer">
-  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | 
-  <a class="rss" href="https://gaoliang.me/atom.xml" target="_blank">RSS</a>
-</div>
-
-<script>
-  hljs.initHighlightingOnLoad()
-
-  let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
-
-  // This should probably be throttled.
-  // Especially because it triggers during smooth scrolling.
-  // https://lodash.com/docs/4.17.10#throttle
-  // You could do like...
-  // window.addEventListener("scroll", () => {
-  //    _.throttle(doThatStuff, 100);
-  // });
-  // Only not doing it here to keep this Pen dependency-free.
-
-  window.addEventListener("scroll", event => {
-    let fromTop = window.scrollY;
-
-    mainNavLinks.forEach((link, index) => {
-      let section = document.getElementById(decodeURI(link.hash).substring(1));
-      let nextSection = null
-      if (mainNavLinks[index + 1]) {
-        nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
-      }
-      console.log('section.offsetHeight', section.offsetHeight);
-      if (section.offsetTop <= fromTop) {
-        if (nextSection) {
-          if (nextSection.offsetTop > fromTop) {
-            link.classList.add("current");
-          } else {
-            link.classList.remove("current");    
-          }
-        } else {
-          link.classList.add("current");
-        }
-      } else {
-        link.classList.remove("current");
-      }
-    });
-  });
-
-</script>
-
-      </div>
     </div>
-  </body>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-class文件常量池
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        常量池可以比喻为class文件里的资源仓库，他是class文件结构中与其他项目关联最多的数据，通常也是占据class文件空间最大的项目。
+由于常量池中的常量的数量是不固定的，所以在入口处需要防止一个u2类型的数据，代表常量池容量计数器。需要...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-class文件结构初探
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        
+class文件是一组以8个字节为基础单位的二进制流，各个数据项紧凑排列，没有任何分隔符，当遇到需要占用8个字节以上空间的数据项时，会采用大端原则进行排列，即高位在前。
+class文件采用了一种类似C语言结构体的伪结构来存储数据，这个伪结构...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-内存划分
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-13</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        jvm运行时会把内存分为多个数据区域，根据《java虚拟机规范》规定，可以划分为方法区，堆，虚拟机栈，本地方法栈和程序计数器，其中方法区和堆是所有线程所共享的，其他则是每个线程隔离的。
+
+程序计数器
+其中记录的是当前所执行的字节码的行号，字...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          Java 日志系统梳理
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2019-10-19</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        
+
+...
+      </div>
+      <a href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+      <img class="flex-shrink-0 self-start md:ml-4 mb-4 md:mb-0 rounded-sm object-cover featured-img order-1 md:order-2 w-full h-40 md:w-56 md:h-32" loading="lazy" src="https://gaoliang.me/post-images/java-ri-zhi-xi-tong-shu-li.jpg" alt="Java 日志系统梳理">
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          代理软件的代理模式介绍
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2019-09-10</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        常用的代理软件，通常会有系统代理模式、PAC、代理规则等多项设置，这些设置通常都十分相近，容易混淆，所以做一次简单的梳理。
+ssr-csharp，shadowsocks-windows
+这两个 windows 软件，通常在右键菜单里会有系统...
+      </div>
+      <a href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+      <img class="flex-shrink-0 self-start md:ml-4 mb-4 md:mb-0 rounded-sm object-cover featured-img order-1 md:order-2 w-full h-40 md:w-56 md:h-32" loading="lazy" src="https://gaoliang.me/post-images/ssr-v2ray-proxy-analysis.jpg" alt="代理软件的代理模式介绍">
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          我与我的利器
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2019-07-26</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        从 Gridea（一个静态博客写作客户端）作者海岛心hey的博客看到利器社群计划后，感觉很有意思，自己也写了一篇，但是说来惭愧，自己算不上创造者，没有什么拿的出手的作品，就单纯的分享下自己的一些内容吧，当作本博客的「关于」也好。
+更新记录：...
+      </div>
+      <a href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+      <img class="flex-shrink-0 self-start md:ml-4 mb-4 md:mb-0 rounded-sm object-cover featured-img order-1 md:order-2 w-full h-40 md:w-56 md:h-32" loading="lazy" src="https://gaoliang.me/post-images/talking-about-me-and-my-favorite-toolset.jpg" alt="我与我的利器">
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/java-class-learn/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          Java学习-类
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2018-04-24</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        1. 实现一个类
+定义一个完整类的格式应该是
+[类访问修饰符] [修饰符] 类名 [extend 父类名] [implements 接口列表]{
+...
+}
+public class Employee{
+    private String...
+      </div>
+      <a href="https://gaoliang.me/post/java-class-learn/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+      <img class="flex-shrink-0 self-start md:ml-4 mb-4 md:mb-0 rounded-sm object-cover featured-img order-1 md:order-2 w-full h-40 md:w-56 md:h-32" loading="lazy" src="https://gaoliang.me/post-images/java-class-learn.jpeg" alt="Java学习-类">
+    
+  </div>
+  
+      </div>
+
+      
+  <div class="my-4 flex justify-between px-4 md:px-0">
+    
+    
+      <a href="https://gaoliang.me/page/2" class="btn btn-white">
+        下一页
+        <i class="ri-arrow-right-line ml-4"></i>
+      </a>
+    
+  </div>
+
+      <footer class="py-12 text-center px-4 md:px-0" v-pre>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+</footer>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://gaoliang.me/media/scripts/main.js"></script>
+</body>
+
 </html>
