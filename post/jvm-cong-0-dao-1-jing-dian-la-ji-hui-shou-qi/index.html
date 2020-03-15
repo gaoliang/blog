@@ -1,0 +1,378 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>JVM从0到1-经典垃圾回收器 - 高亮的杂货铺</title>
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.7.2/animate.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/media/css/tailwind.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="JVM从0到1-经典垃圾回收器 - 高亮的杂货铺 - Atom Feed" href="https://gaoliang.me/atom.xml">
+
+    
+
+  <meta name="description" content="封面图为七种作用于不同分代的收集器，如果两个收集器之间存在连线，就说明它们可以搭配使用
+Serial收集器【新生代】
+
+图为ParNew/Serial Old收集器运行示意图
+最老的单线程收集器，使用标记-复制算法，会Stop The Wo..." />
+  <meta property="og:title" content="JVM从0到1-经典垃圾回收器 - 高亮的杂货铺">
+  <meta property="og:description" content="封面图为七种作用于不同分代的收集器，如果两个收集器之间存在连线，就说明它们可以搭配使用
+Serial收集器【新生代】
+
+图为ParNew/Serial Old收集器运行示意图
+最老的单线程收集器，使用标记-复制算法，会Stop The Wo..." />
+  <meta property="og:type" content="articles">
+  <meta property="og:url" content="https://gaoliang.me/post/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi/" />
+  <meta property="og:image" content="https://gaoliang.me/post-images/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi.png">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:width" content="1200">
+  <meta name="twitter:title" content="JVM从0到1-经典垃圾回收器 - 高亮的杂货铺">
+  <meta name="twitter:description" content="封面图为七种作用于不同分代的收集器，如果两个收集器之间存在连线，就说明它们可以搭配使用
+Serial收集器【新生代】
+
+图为ParNew/Serial Old收集器运行示意图
+最老的单线程收集器，使用标记-复制算法，会Stop The Wo...">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://gaoliang.me/post/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi/">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+ 
+  
+    <link rel="stylesheet" href="https://gaoliang.me/media/css/prism-synthwave84.css">
+  
+
+  
+</head>
+
+<body>
+  <div class="antialiased flex flex-col min-h-screen" id="app">
+    <a href="https://gaoliang.me" class="fixed top-0 left-0 mt-4 bg-black text-white dark:text-gray-700 dark:bg-yellow-50 dark:hover:bg-black dark:hover:text-white inline-flex p-2 pl-8 hover:text-gray-700 hover:bg-yellow-50 font-bold z-10 transition-fast animated fadeInLeft">
+      高亮的杂货铺
+    </a>
+    <div class="max-w-4xl w-full mx-auto">
+      <div class="shadow-box bg-white dark:bg-gray-600 rounded-lg pt-32 md:pt-64 px-4 md:px-8 pb-8 animated fadeIn mb-8">
+        <h1 class="text-5xl font-semibold leading-normal pb-8 mb-8 border-b-8 border-gray-700">
+          JVM从0到1-经典垃圾回收器
+        </h1>
+        
+          <img src="https://gaoliang.me/post-images/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi.png" alt="JVM从0到1-经典垃圾回收器" class="block w-full mb-8">
+        
+        <div class="mb-8 flex flex-wrap">
+          <div class="text-gray-400 text-sm mr-4">2020-03-15 · 9 min read</div>
+          
+            <a href="https://gaoliang.me/tag/jvm/" class="text-gray-700 text-sm border-b-2 border-dotted border-gray-200 hover:border-gray-600 transition-all duration-100 inline-flex mr-2">
+              <i class="ri-hashtag"></i>
+              JVM
+            </a>
+          
+            <a href="https://gaoliang.me/tag/i6PatO6w0/" class="text-gray-700 text-sm border-b-2 border-dotted border-gray-200 hover:border-gray-600 transition-all duration-100 inline-flex mr-2">
+              <i class="ri-hashtag"></i>
+              Java
+            </a>
+          
+        </div>
+        <div class="markdown mb-8" v-pre>
+          <p>封面图为七种作用于不同分代的收集器，如果两个收集器之间存在连线，就说明它们可以搭配使用</p>
+<h2 id="serial收集器新生代">Serial收集器【新生代】</h2>
+<p><img src="https://gaoliang.me/post-images/1584267165324.png" alt="" loading="lazy"><br>
+图为ParNew/Serial Old收集器运行示意图<br>
+最老的单线程收集器，使用标记-复制算法，会Stop The World，但他目前仍然是HotSpot在客户端模式下的默认新生代收集器。在客户端模式下是一个不错的选择。</p>
+<h2 id="serial-old收集器-老年代">Serial Old收集器 【老年代】</h2>
+<p>Serial Old是Serial收集器的老年代版本，它同样是一个单线程收集器，使用标记-整理算法。</p>
+<h2 id="parnew收集器新生代">ParNew收集器【新生代】</h2>
+<p><img src="https://gaoliang.me/post-images/1584267289522.png" alt="" loading="lazy"><br>
+图为ParNew/Serial Old收集器运行示意图<br>
+除了支持多线程并行收集之外，并没有太多创新之处。 这个收集器可以和CMS收集器一起工作，后来ParNew合并入了CMS</p>
+<h2 id="parallel-scavenge收集器新生代">Parallel Scavenge收集器【新生代】</h2>
+<p>Parallel Scavenge收集器也是一款新生代收集器，它同样是基于标记-复制算法实现的收集器，也是<br>
+能够并行收集的多线程收集器。 相对于ParNew收集器，特点是他的目标不是尽可能的缩短垃圾收集时用户线程的停顿时间，而是达到一个可控制的吞吐比，所谓吞吐比就是处理器用于运行用户代码与处理器总消耗时间的比值。 主要适合用于在后台运算而不需要太多交互的分析任务。</p>
+<h2 id="parallel-old收集器老年代">Parallel Old收集器【老年代】</h2>
+<p>Parallel Old是Parallel Scavenge收集器的老年代版本，支持多线程并发收集，基于标记-整理算法实现。</p>
+<h2 id="cms收集器concurrent-mark-sweep老年代">CMS收集器（Concurrent Mark Sweep）【老年代】</h2>
+<p><img src="https://gaoliang.me/post-images/1584278232152.png" alt="" loading="lazy"><br>
+CMS收集器的目标是获取最短回收停顿时间。 从名字就可以看出采用的是标记清除算法。<br>
+他的过程包括四部</p>
+<ol>
+<li>初始标记</li>
+<li>并发标记</li>
+<li>重新标记</li>
+<li>并发清除</li>
+</ol>
+<p>其中，并发标记重新标记这两个步骤仍然需要“Stop The World”。初始标记仅仅只是标记一下GC Roots能直接关联到的对象，速度很快；并发标记阶段就是从GC Roots的直接关联对象开始遍历整个对象图的过程，这个过程耗时较长但是不需要停顿用户线程，可以与垃圾收集线程一起并发运行；而重新标记阶段则是为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录<br>
+最后是并发清除阶段，清理删除掉标记阶段判断的已经死亡的对象，由于不需要移动存活对象，所以这个阶段也是可以与用户线程同时并发的。</p>
+<p>CMS收集器无法处理&quot;浮动垃圾“，即在并发标记和并发清理阶段，产生的新的垃圾对象。</p>
+<p>同样，也正是因为没法处理”浮动垃圾“，CMS就不能等待到老年代完全被填满了再进行垃圾回收，必须要预留一部分空间给用户线程使用。在JDK5中，当老年代使用了68%的空间后，到了JDK6，被调整到了92%，如果在运行时发生了无法分配内存给用户线程的情况，则不得不启动后背预案，冻结用户线程的执行，临时启用Serial Old处理器来进行老年代的垃圾收集，但是这样的话，停顿的时间就很常了。</p>
+<p>此外，由于采用的是标记-清除的算法，还会导致大量空间碎片的产生。空间碎片过多时，就有可能导致大对象无法进行分配，从而导致不能不提前进行一次 Full GC。 为了解决这个问题，CMS提供了一个参数，可以在被迫Full GC的时候，开启内存碎片的合并整理。</p>
+<h2 id="garbage-first收集器">Garbage First收集器</h2>
+<p><img src="https://gaoliang.me/post-images/1584280749522.png" alt="" loading="lazy"><br>
+G1收集器基于”停顿时间模型“的收集器，可以支持指定一个长度为M毫秒的时间片对内，消耗在垃圾收集上的时间大概率不超过N毫秒这样的支持。</p>
+<p>G1收集器属于Mixed GC模式，它可以面向堆中的任意一个部分来组成回收集（Collection Set)。 衡量标准不再是它属于哪个分代，而是在哪块内存中存放的垃圾数量最多，回收收益组大。</p>
+<p>G1也仍然遵循分代收集理论，但其不再坚持固定大小以及固定数量的分代区域划分，而是把连续的Java堆划分为多个大小相等的独立区域（Region)，每一个Region都可以根据需要，扮演新生代的Eden空间、Survivor空间，或者老年代空间。 收集器能够对扮演不同角色的Region采用不同的策略去处理，这样无论是新创建的对象，还是已经存活了一段时间，熬过多次收集的旧对象，都能获取很好的收集效果。</p>
+<p>Region中还有一类特殊的Humongous区域，专门用来存储大对象，G1认为只要大小超过了一个Region容量一般的对象，就应该被视为大对象。 每个Region的大小可以通过参数进行设定。 如果对象大小超过了一个Region，则会被存放在N个连续的Humongous Region中。 G1把Humangous Regions视作老年代的一部分来看带。</p>
+<p>G1收集器之所以能建立可预测的停顿时间模型，是因为它将Region作为单次回收的最小单元，即每次收集到的内存空间都是Region大小的整数倍，这样可以有计划地避免在整个Java堆中进行全区域的垃圾收集。更具体的处理思路是让G1收集器去跟踪各个Region里面的垃圾堆积的“价值”大小，价值即回收所获得的空间大小以及回收所需时间的经验值，然后在后台维护一个优先级列表，每次根据用户设定允许的收集停顿时间（使用参数-XX：MaxGCPauseMillis指定，默认值是200毫秒），优先处理回收价值收益最大的那些Region，这也就是“Garbage First”名字的由来。</p>
+<h3 id="g1收集器如何解决跨region引用对象">G1收集器如何解决跨Region引用对象？</h3>
+<p>通过卡表来实现。每个Region都维护自己的记忆集。Region的记忆集相对较为复杂，因为他要存储的并不只有老年代，而是其他所有的Region，所以他是一个hash结构，key为其他Region的起始地址，value是一个结合，存储的是卡表的索引号。即需要同时记录我指向了谁，又要记录谁指向了我。 同样，这种卡表也到只了G1收集器有着更高的内存负担。根据经验，G1至少要消耗大约Java堆10%到20%的额外内存来维持收集器工作。</p>
+<h3 id="在并发标记阶段如何保证收集器线程与用户线程互不干扰的运行">在并发标记阶段，如何保证收集器线程与用户线程互不干扰的运行？</h3>
+<p>一是要保证不能打破原来的对象图结构，这在上一篇中说过，其中CMS采用的是增量更新算法实现，而G1收集器使用的是原始快照（SATB）算法来实现的。 此外，对于用户线程新创建对象的内存分配，G1为每一个Region设计了两个名为TAMS（Top at Mark Start)的指针，把Region的一部分空间划分出来用于并发回收过程中的新对象分配，并发回收时新分配的对象地址都必须要在这两个指针范围内。 G1默认在这两个地址以上的对象是被默认标记过的，即默认他们是存活的，不纳入回收范围。</p>
+<p>和CMS类似，如果创建的新对象没有空间分配，也会导致G1收集器强迫冻结用户线程执行，导致Full GC而产生长时间的”Stop The World“</p>
+<p>G1收集器的运作大致可以分为四个步骤</p>
+<ol>
+<li>初始标记： 标记GC Roots能够直接关联的对象，并修改TAMS指针的值，让下一个阶段并发运行时，能够在可用的Region内分配新对象。</li>
+<li>并发标记：从GC Roots出发，对堆中的对象进行可达性分析，递归扫描整个堆里的对下个图，并找出要回收的对象，这个阶段耗时较长，但是可以与用户程序并发执行。 当对象图扫描完成后，还需要重新处理SATB记录下的在并发时有引用变动的对象。</li>
+<li>最终标记：对用户线程做一个短暂的暂停，用户处理并发标记结束后仍然遗留的那一部分SATB记录。</li>
+<li>筛选回收：负责更新Region的统计数据，堆各个Region的回收价值和成本进行排序，根据用户所期望的停顿时间来指定回收计划，可以自由选择任意多个Region构成回收集，然后决定回收的那一部分Region的存活对象复制到空的Region里，再清理掉整个旧的Region的全部空间，这里涉及到存活对象的移动，是必须暂停用户线程的。</li>
+</ol>
+<p>G1从整体上来看，是基于标记整理算法的，但是从局部上来看，是基于标记复制算法来实现的。</p>
+
+        </div>
+        <!-- Share to Twitter, Weibo, Telegram -->
+        <div class="flex items-center">
+          <div class="mr-4 flex items-center">
+            <i class="ri-share-forward-line text-gray-500"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-blue-500 hover:bg-blue-100 dark:hover:bg-gray-600 inline-flex" @click="shareToTwitter">
+            <i class="ri-twitter-line"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-red-500 hover:bg-red-100 dark:hover:bg-gray-600 inline-flex" @click="shareToWeibo">
+            <i class="ri-weibo-line"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-indigo-500 hover:bg-indigo-100 dark:hover:bg-gray-600 inline-flex" @click="shareToTelegram">
+            <i class="ri-telegram-line"></i>
+          </div>
+        </div>
+      </div>
+
+      
+        
+
+        
+          <link rel="stylesheet" href="https://unpkg.com/disqusjs@1.1/dist/disqusjs.css">
+<script type="application/javascript" src="https://unpkg.com/disqusjs@1.1/dist/disqus.js"></script>
+
+<div id="disqus_thread"></div>
+
+<script type="application/javascript">
+
+var options = {
+  shortname: 'gao-liang-de-za-huo-pu',
+  apikey: 'yetuLkolNo1SQ1c6oRQdEdOLdIpLHymjVOvj23cvFTFwbgwBpfjtGTHKmsSlwdfl',
+}
+if ('') {
+  options.api = ''
+}
+var dsqjs = new DisqusJS(options)
+
+</script>
+
+        
+      
+
+      
+
+      <footer class="py-12 text-center px-4 md:px-0" v-pre>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+</footer>
+    </div>
+
+    <!-- TOC Container -->
+    <div class="fixed right-0 bottom-0 mb-16 mr-4 shadow w-8 h-8 rounded-full flex justify-center items-center z-10 cursor-pointer bg-white dark:bg-gray-500 dark:text-gray-200 hover:shadow-lg transition-all animated fadeInRight" @click="showToc = true">
+      <i class="ri-file-list-line"></i>
+    </div>
+
+    <div class="fixed right-0 top-0 bottom-0 overflow-y-auto w-64 bg-white dark:bg-gray-800 p-4 border-l border-gray-100 dark:border-gray-600 z-10 transition-fast" :class="{ '-mr-64': !showToc }">
+      <div class="flex mb-4 justify-end">
+        <div class="w-8 h-8 inline-flex justify-center items-center rounded-full cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-fast" @click="showToc = false">
+          <i class="ri-close-line text-lg"></i>
+        </div>
+      </div>
+      <div class="post-toc-container">
+        <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#serial%E6%94%B6%E9%9B%86%E5%99%A8%E6%96%B0%E7%94%9F%E4%BB%A3">Serial收集器【新生代】</a></li>
+<li><a href="#serial-old%E6%94%B6%E9%9B%86%E5%99%A8-%E8%80%81%E5%B9%B4%E4%BB%A3">Serial Old收集器 【老年代】</a></li>
+<li><a href="#parnew%E6%94%B6%E9%9B%86%E5%99%A8%E6%96%B0%E7%94%9F%E4%BB%A3">ParNew收集器【新生代】</a></li>
+<li><a href="#parallel-scavenge%E6%94%B6%E9%9B%86%E5%99%A8%E6%96%B0%E7%94%9F%E4%BB%A3">Parallel Scavenge收集器【新生代】</a></li>
+<li><a href="#parallel-old%E6%94%B6%E9%9B%86%E5%99%A8%E8%80%81%E5%B9%B4%E4%BB%A3">Parallel Old收集器【老年代】</a></li>
+<li><a href="#cms%E6%94%B6%E9%9B%86%E5%99%A8concurrent-mark-sweep%E8%80%81%E5%B9%B4%E4%BB%A3">CMS收集器（Concurrent Mark Sweep）【老年代】</a></li>
+<li><a href="#garbage-first%E6%94%B6%E9%9B%86%E5%99%A8">Garbage First收集器</a>
+<ul>
+<li><a href="#g1%E6%94%B6%E9%9B%86%E5%99%A8%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E8%B7%A8region%E5%BC%95%E7%94%A8%E5%AF%B9%E8%B1%A1">G1收集器如何解决跨Region引用对象？</a></li>
+<li><a href="#%E5%9C%A8%E5%B9%B6%E5%8F%91%E6%A0%87%E8%AE%B0%E9%98%B6%E6%AE%B5%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%94%B6%E9%9B%86%E5%99%A8%E7%BA%BF%E7%A8%8B%E4%B8%8E%E7%94%A8%E6%88%B7%E7%BA%BF%E7%A8%8B%E4%BA%92%E4%B8%8D%E5%B9%B2%E6%89%B0%E7%9A%84%E8%BF%90%E8%A1%8C">在并发标记阶段，如何保证收集器线程与用户线程互不干扰的运行？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      </div>
+    </div>
+
+    <!-- Back to top -->
+    <div class="fixed right-0 bottom-0 mb-4 mr-4 shadow w-8 h-8 rounded-full flex justify-center items-center z-10 cursor-pointer bg-white hover:shadow-lg transition-all dark:bg-gray-500 dark:text-gray-200" @click="backToUp" v-show="scrolled">
+      <i class="ri-arrow-up-line"></i>
+    </div>
+  </div>
+
+  <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe. 
+        It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg">
+  </div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item">
+      </div>
+      <div class="pswp__item">
+      </div>
+      <div class="pswp__item">
+      </div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter">
+        </div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip">
+        </div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+      </button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+      </button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://gaoliang.me/media/scripts/main.js"></script>
+  
+  <!-- Code Highlight -->
+  
+    <script src="https://gaoliang.me/media/prism.js"></script>
+    <script>
+      Prism.highlightAll()
+    </script>
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+  <script>
+    //拿到预览框架，也就是上面的html代码
+    var pswpElement = document.querySelectorAll('.pswp')[0];
+    //定义图片数组变量
+    var imgitems;
+    /**
+    * 用于显示预览界面
+    * @param index 图片数组下标
+    */
+    function viewImg(index) {
+      //其它选项这里不做过多阐述，详情见官网
+      var pswpoptions = {
+        index: parseInt(index, 10), // 开始幻灯片索引。0是第一张幻灯片。必须是整数，而不是字符串。
+        bgOpacity: 0.7, // 背景透明度，0-1
+        maxSpreadZoom: 3, // 缩放级别，不要太大
+      };
+      //初始化并打开PhotoSwipe，pswpElement对应上面预览框架，PhotoSwipeUI_Default为皮肤，imgitems为图片数组，pswpoptions为选项
+      var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, imgitems, pswpoptions);
+      gallery.init()
+    }
+    /**
+    * 用于添加图片点击事件
+    * @param img 图片元素
+    * @param index 所属下标（在imgitems中的位置）
+    */
+    function addImgClick(img, index) {
+      img.onclick = function() {
+        viewImg(index)
+      }
+    }
+    /**
+    * 轮询所有图片，获取src、width、height等数据，加入imgitems，并给图片元素添加事件
+    * 最好在onload中执行该方法，本站因放在最底部，所以直接初始化
+    * 异步加载图片可在图片元素创建完成后调用此方法
+    */
+    function initImg() {
+      //重置图片数组
+      imgitems = [];
+      //查找class:markdown 下的所有img元素并遍历
+      var imgs = document.querySelectorAll('.markdown img');
+      for (var i = 0; i < imgs.length; i++) {
+        var img = imgs[i];
+        //本站相册初始为loading图片，真实图片放在data-src
+        var ds = img.getAttribute("data-src");
+        //创建image对象，用于获取图片宽高
+        var imgtemp = new Image();
+        //判断是否存在data-src
+        if (ds != null && ds.length > 0) {
+          imgtemp.src = ds
+        } else {
+          imgtemp.src = img.src
+        }
+        //判断是否存在缓存
+        if (imgtemp.complete) {
+          var imgobj = {
+            "src": imgtemp.src,
+            "w": imgtemp.width,
+            "h": imgtemp.height,
+          };
+          imgitems[i] = imgobj;
+          addImgClick(img, i);
+        } else {
+          console.log('进来了2')
+          imgtemp.index = i;
+          imgtemp.img = img;
+          imgtemp.onload = function() {
+            var imgobj = {
+              "src": this.src,
+              "w": this.width,
+              "h": this.height,
+            };
+            //不要使用push，因为onload前后顺序会不同
+            imgitems[this.index] = imgobj
+            //添加点击事件
+            addImgClick(this.img, this.index);
+          }
+        }
+      }
+    }
+    //初始化
+    initImg();
+  </script>
+  
+  
+    
+  
+</body>
+
+</html>

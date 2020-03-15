@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://gaoliang.me</id>
     <title>高亮的杂货铺</title>
-    <updated>2020-03-14T10:48:42.996Z</updated>
+    <updated>2020-03-15T14:43:35.071Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://gaoliang.me"/>
     <link rel="self" href="https://gaoliang.me/atom.xml"/>
@@ -10,6 +10,319 @@
     <logo>https://gaoliang.me/images/avatar.png</logo>
     <icon>https://gaoliang.me/favicon.ico</icon>
     <rights>All rights reserved 2020, 高亮的杂货铺</rights>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-经典垃圾回收器]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi/">
+        </link>
+        <updated>2020-03-15T10:10:00.000Z</updated>
+        <content type="html"><![CDATA[<p>封面图为七种作用于不同分代的收集器，如果两个收集器之间存在连线，就说明它们可以搭配使用</p>
+<h2 id="serial收集器新生代">Serial收集器【新生代】</h2>
+<p><img src="https://gaoliang.me/post-images/1584267165324.png" alt="" loading="lazy"><br>
+图为ParNew/Serial Old收集器运行示意图<br>
+最老的单线程收集器，使用标记-复制算法，会Stop The World，但他目前仍然是HotSpot在客户端模式下的默认新生代收集器。在客户端模式下是一个不错的选择。</p>
+<h2 id="serial-old收集器-老年代">Serial Old收集器 【老年代】</h2>
+<p>Serial Old是Serial收集器的老年代版本，它同样是一个单线程收集器，使用标记-整理算法。</p>
+<h2 id="parnew收集器新生代">ParNew收集器【新生代】</h2>
+<p><img src="https://gaoliang.me/post-images/1584267289522.png" alt="" loading="lazy"><br>
+图为ParNew/Serial Old收集器运行示意图<br>
+除了支持多线程并行收集之外，并没有太多创新之处。 这个收集器可以和CMS收集器一起工作，后来ParNew合并入了CMS</p>
+<h2 id="parallel-scavenge收集器新生代">Parallel Scavenge收集器【新生代】</h2>
+<p>Parallel Scavenge收集器也是一款新生代收集器，它同样是基于标记-复制算法实现的收集器，也是<br>
+能够并行收集的多线程收集器。 相对于ParNew收集器，特点是他的目标不是尽可能的缩短垃圾收集时用户线程的停顿时间，而是达到一个可控制的吞吐比，所谓吞吐比就是处理器用于运行用户代码与处理器总消耗时间的比值。 主要适合用于在后台运算而不需要太多交互的分析任务。</p>
+<h2 id="parallel-old收集器老年代">Parallel Old收集器【老年代】</h2>
+<p>Parallel Old是Parallel Scavenge收集器的老年代版本，支持多线程并发收集，基于标记-整理算法实现。</p>
+<h2 id="cms收集器concurrent-mark-sweep老年代">CMS收集器（Concurrent Mark Sweep）【老年代】</h2>
+<p><img src="https://gaoliang.me/post-images/1584278232152.png" alt="" loading="lazy"><br>
+CMS收集器的目标是获取最短回收停顿时间。 从名字就可以看出采用的是标记清除算法。<br>
+他的过程包括四部</p>
+<ol>
+<li>初始标记</li>
+<li>并发标记</li>
+<li>重新标记</li>
+<li>并发清除</li>
+</ol>
+<p>其中，并发标记重新标记这两个步骤仍然需要“Stop The World”。初始标记仅仅只是标记一下GC Roots能直接关联到的对象，速度很快；并发标记阶段就是从GC Roots的直接关联对象开始遍历整个对象图的过程，这个过程耗时较长但是不需要停顿用户线程，可以与垃圾收集线程一起并发运行；而重新标记阶段则是为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录<br>
+最后是并发清除阶段，清理删除掉标记阶段判断的已经死亡的对象，由于不需要移动存活对象，所以这个阶段也是可以与用户线程同时并发的。</p>
+<p>CMS收集器无法处理&quot;浮动垃圾“，即在并发标记和并发清理阶段，产生的新的垃圾对象。</p>
+<p>同样，也正是因为没法处理”浮动垃圾“，CMS就不能等待到老年代完全被填满了再进行垃圾回收，必须要预留一部分空间给用户线程使用。在JDK5中，当老年代使用了68%的空间后，到了JDK6，被调整到了92%，如果在运行时发生了无法分配内存给用户线程的情况，则不得不启动后背预案，冻结用户线程的执行，临时启用Serial Old处理器来进行老年代的垃圾收集，但是这样的话，停顿的时间就很常了。</p>
+<p>此外，由于采用的是标记-清除的算法，还会导致大量空间碎片的产生。空间碎片过多时，就有可能导致大对象无法进行分配，从而导致不能不提前进行一次 Full GC。 为了解决这个问题，CMS提供了一个参数，可以在被迫Full GC的时候，开启内存碎片的合并整理。</p>
+<h2 id="garbage-first收集器">Garbage First收集器</h2>
+<p><img src="https://gaoliang.me/post-images/1584280749522.png" alt="" loading="lazy"><br>
+G1收集器基于”停顿时间模型“的收集器，可以支持指定一个长度为M毫秒的时间片对内，消耗在垃圾收集上的时间大概率不超过N毫秒这样的支持。</p>
+<p>G1收集器属于Mixed GC模式，它可以面向堆中的任意一个部分来组成回收集（Collection Set)。 衡量标准不再是它属于哪个分代，而是在哪块内存中存放的垃圾数量最多，回收收益组大。</p>
+<p>G1也仍然遵循分代收集理论，但其不再坚持固定大小以及固定数量的分代区域划分，而是把连续的Java堆划分为多个大小相等的独立区域（Region)，每一个Region都可以根据需要，扮演新生代的Eden空间、Survivor空间，或者老年代空间。 收集器能够对扮演不同角色的Region采用不同的策略去处理，这样无论是新创建的对象，还是已经存活了一段时间，熬过多次收集的旧对象，都能获取很好的收集效果。</p>
+<p>Region中还有一类特殊的Humongous区域，专门用来存储大对象，G1认为只要大小超过了一个Region容量一般的对象，就应该被视为大对象。 每个Region的大小可以通过参数进行设定。 如果对象大小超过了一个Region，则会被存放在N个连续的Humongous Region中。 G1把Humangous Regions视作老年代的一部分来看带。</p>
+<p>G1收集器之所以能建立可预测的停顿时间模型，是因为它将Region作为单次回收的最小单元，即每次收集到的内存空间都是Region大小的整数倍，这样可以有计划地避免在整个Java堆中进行全区域的垃圾收集。更具体的处理思路是让G1收集器去跟踪各个Region里面的垃圾堆积的“价值”大小，价值即回收所获得的空间大小以及回收所需时间的经验值，然后在后台维护一个优先级列表，每次根据用户设定允许的收集停顿时间（使用参数-XX：MaxGCPauseMillis指定，默认值是200毫秒），优先处理回收价值收益最大的那些Region，这也就是“Garbage First”名字的由来。</p>
+<h3 id="g1收集器如何解决跨region引用对象">G1收集器如何解决跨Region引用对象？</h3>
+<p>通过卡表来实现。每个Region都维护自己的记忆集。Region的记忆集相对较为复杂，因为他要存储的并不只有老年代，而是其他所有的Region，所以他是一个hash结构，key为其他Region的起始地址，value是一个结合，存储的是卡表的索引号。即需要同时记录我指向了谁，又要记录谁指向了我。 同样，这种卡表也到只了G1收集器有着更高的内存负担。根据经验，G1至少要消耗大约Java堆10%到20%的额外内存来维持收集器工作。</p>
+<h3 id="在并发标记阶段如何保证收集器线程与用户线程互不干扰的运行">在并发标记阶段，如何保证收集器线程与用户线程互不干扰的运行？</h3>
+<p>一是要保证不能打破原来的对象图结构，这在上一篇中说过，其中CMS采用的是增量更新算法实现，而G1收集器使用的是原始快照（SATB）算法来实现的。 此外，对于用户线程新创建对象的内存分配，G1为每一个Region设计了两个名为TAMS（Top at Mark Start)的指针，把Region的一部分空间划分出来用于并发回收过程中的新对象分配，并发回收时新分配的对象地址都必须要在这两个指针范围内。 G1默认在这两个地址以上的对象是被默认标记过的，即默认他们是存活的，不纳入回收范围。</p>
+<p>和CMS类似，如果创建的新对象没有空间分配，也会导致G1收集器强迫冻结用户线程执行，导致Full GC而产生长时间的”Stop The World“</p>
+<p>G1收集器的运作大致可以分为四个步骤</p>
+<ol>
+<li>初始标记： 标记GC Roots能够直接关联的对象，并修改TAMS指针的值，让下一个阶段并发运行时，能够在可用的Region内分配新对象。</li>
+<li>并发标记：从GC Roots出发，对堆中的对象进行可达性分析，递归扫描整个堆里的对下个图，并找出要回收的对象，这个阶段耗时较长，但是可以与用户程序并发执行。 当对象图扫描完成后，还需要重新处理SATB记录下的在并发时有引用变动的对象。</li>
+<li>最终标记：对用户线程做一个短暂的暂停，用户处理并发标记结束后仍然遗留的那一部分SATB记录。</li>
+<li>筛选回收：负责更新Region的统计数据，堆各个Region的回收价值和成本进行排序，根据用户所期望的停顿时间来指定回收计划，可以自由选择任意多个Region构成回收集，然后决定回收的那一部分Region的存活对象复制到空的Region里，再清理掉整个旧的Region的全部空间，这里涉及到存活对象的移动，是必须暂停用户线程的。</li>
+</ol>
+<p>G1从整体上来看，是基于标记整理算法的，但是从局部上来看，是基于标记复制算法来实现的。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-HotSpot垃圾收集算法细节，根节点枚举和可达性分析]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie-gen-jie-dian-mei-ju-he-ke-da-xing-fen-xi/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie-gen-jie-dian-mei-ju-he-ke-da-xing-fen-xi/">
+        </link>
+        <updated>2020-03-15T08:35:44.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="根节点枚举">根节点枚举</h2>
+<p>可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。</p>
+<p>迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程的，因此毫无疑问根节点枚举也会有“Stop The World”的困扰。 现在可达性分析算法在查找引用链这个过程已经可以做到和用户线程并发了，但是枚举跟节点这个步骤不行。 因为枚举根节点必须在一个能保障一致性的快照中进行的。 这里一致性指的是整个枚举期间执行子系统看起来就像是被冻结到了某个时间点了，不会出现在分析过程中，根节点上的对象引用关系还在不断变化的情况。 否则将会无法保证分析结果的准确性。</p>
+<p>显然，直接进行遍历是消耗极高的行为，必须进行优化。</p>
+<p>目前主流的Java虚拟机都是使用的准确式垃圾收集，所以当线程停顿后，并不需要检查上下文和全局中的所有引用位置，虚拟机应该有办法能够直接知道哪里存放着对象的引用。 在HotSpot里，是用一组称为OopMap的数据结构来达到这个目的的，一单类加载动作完成的时候，HotSpot就会把对象内什么偏移量上是什么数据类型计算出来。 这样垃圾收集器在扫描时就可以直接得知这些信息了，并不需要真正的一个不漏的从方法区GC Roots开始查找。</p>
+<h2 id="安全点">安全点</h2>
+<p>何时生成OopMap?  显然不能每条指令都生成，这回导致大量的额外存储空间。 实际上HotSpot只会在特定的位置生成OopMap，这种位置被称为安全点。一般安全点位置的选取基本上是遵循“是否能够让程序长时间执行的特征”为标准的，因此，一般会在方法调用、循环跳转、异常跳转等指令时，才会产生安全点。</p>
+<p>安全点的定义有了，还有一个问题就是如何在垃圾回收时，让所有的线程都在最近的的安全点停下来。<br>
+目前主要采用两种方案，抢先式中断和主动式终端，抢先式终端不需要线程的执行代码进行配合，在垃圾回收时，系统首先让所有的用户线程终端，然后如果发现有线程终端点不在安全点上，就恢复这个线程，让他一会再重新终端，直到跑到安全点上，目前基本没有虚拟机采用抢先式中段来暂停线程响应GC事件。</p>
+<p>主动式终端是在垃圾回收需要中断线程的时候，不对线程操作，而是仅仅设置一个标志位，各个线程执行的时候要不断的轮询这个标志位，一但发现中断标志为真，那就自己在最近的安全点上主动挂起。</p>
+<p>因为轮询需要频繁出现，因此必须足够高效，HotSpot通过内存保护陷阱的方式，将操作精简到了一条汇编指令。</p>
+<h2 id="安全区域">安全区域</h2>
+<p>如果一个线程在垃圾回收发生时，正处于sleep或者阻塞状态，就必须要引入安全区域来解决这种情况。<br>
+安全区域是指的能确保在某一段代码片段中，引用关系不会发生变化。 因此在这个区域内任意地方开始垃圾收集都是安全的。</p>
+<p>当用户线程执行到安全区域里的代码时，首先会标识自己已经进入了安全区域，这时候垃圾收集就不需要关心这个线程了，当线程要离开这个区域的时候，必须要检查虚拟机是否已经完成了根节点枚举。如果完成了，就继续执行，否则，就要阻塞知道收到离开安全区域的信号。</p>
+<h2 id="记忆集与卡表">记忆集与卡表</h2>
+<p>为了解决跨代引用的问题，垃圾收集器在新生代中建立了记忆集的结构，以避免整个老年代都被加进 GC Roots的扫描范围。 事实上，并不仅是新生代和老年代之间才存在跨代引用，所有涉及到分区域收集的收集器，都会有相同问题。</p>
+<p>记忆集通常不会直接记录所有存在跨代引用的对象，而是通过卡表的方式，更粗粒度的记录哪一个范围的非收集区域存在指向收集区域的指针就可以了。</p>
+<p>卡表就是一种常见的记忆集实现形式， 卡表的每一项元素都对应着内存区域中一块特定大小的内存块，这个内存块被称为卡页，一把来说，卡页大小都是2的N此幂。 卡表一般都设计成一个字节数组。<br>
+<img src="https://gaoliang.me/post-images/1584264190400.png" alt="" loading="lazy"><br>
+一个卡页的内存中通常包含不止一个对象，只要卡页内有一个（或更多）对象的字段存在着跨代指针，那就将对应卡表的数组元素的值标识为1，称为这个元素变脏（Dirty）。</p>
+<h2 id="写屏障">写屏障</h2>
+<p>通过上面的方式，已经解决了GC Roots扫描范围的问题。 但是卡表谁来维护呢？<br>
+HotSpot虚拟机是通过写屏障（Write Barrier）技术来维护卡表状态的。 写屏障可以看作是虚拟机层面堆引用类型字段赋值这个操作的AOP切面，在引用对象赋值时会产生一个环形通知，供程序执行二外的动作。</p>
+<h2 id="并发的可达性分析">并发的可达性分析</h2>
+<p>并发的可达性分析可能会导致两个问题，一种是把原本消亡的对象错误标记为存活，这不是好事，但其实是可以容忍的，只不过产生了一点逃过本次收集的浮动垃圾而已，下次收集清理掉就好。另一种是把原本存活的对象错误标记为已消亡，这就是非常致命的后果了，程序肯定会因此发生错误。<br>
+<img src="https://gaoliang.me/post-images/1584265987274.png" alt="" loading="lazy"></p>
+<p>Wilson于1994年在理论上证明了，当且仅当以下两个条件同时满足时，会产生“对象消失”的问题，即原本应该是黑色的对象被误标为白色：</p>
+<ul>
+<li>赋值器插入了一条或多条从黑色对象到白色对象的新引用；</li>
+<li>·赋值器删除了全部从灰色对象到该白色对象的直接或间接引用。<br>
+为了解决这种问题， 只要破坏这两个条件中的任意一个即可，因而出现了两种解决方案，增量更新和原始快照。</li>
+</ul>
+<p>增量更新主要是破坏第一个条件，新增引用时，将引用记录下来，当并发扫描结束后，再将这些记录过的引用为根，重新扫描一次。</p>
+<p>原始快照主要是破坏第二个条件，当灰色对象要删除指向白色对象的引用的时候，就将这个要删除的引用记录下来，在并发扫描结束后，再重新将这些记录过的引用关系为跟，重新扫描一遍。 即手动恢复到开始扫描那一刻的快照图进行搜索。</p>
+<p>CMS是基于增量跟新的，G1和Shenandoah是基于原始快照的。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-HotSpot垃圾收集算法细节]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie/">
+        </link>
+        <updated>2020-03-15T08:35:44.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="根节点枚举">根节点枚举</h2>
+<p>可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。</p>
+<p>迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程的，因此毫无疑问根节点枚举也会有“Stop The World”的困扰。 现在可达性分析算法在查找引用链这个过程已经可以做到和用户线程并发了，但是枚举跟节点这个步骤不行。 因为枚举根节点必须在一个能保障一致性的快照中进行的。 这里一致性指的是整个枚举期间执行子系统看起来就像是被冻结到了某个时间点了，不会出现在分析过程中，根节点上的对象引用关系还在不断变化的情况。 否则将会无法保证分析结果的准确性。</p>
+<p>显然，直接进行遍历是消耗极高的行为，必须进行优化。</p>
+<p>目前主流的Java虚拟机都是使用的准确式垃圾收集，所以当线程停顿后，并不需要检查上下文和全局中的所有引用位置，虚拟机应该有办法能够直接知道哪里存放着对象的引用。 在HotSpot里，是用一组称为OopMap的数据结构来达到这个目的的，一单类加载动作完成的时候，HotSpot就会把对象内什么偏移量上是什么数据类型计算出来。 这样垃圾收集器在扫描时就可以直接得知这些信息了，并不需要真正的一个不漏的从方法区GC Roots开始查找。</p>
+<h2 id="安全点">安全点</h2>
+<p>何时生成OopMap?  显然不能每条指令都生成，这回导致大量的额外存储空间。 实际上HotSpot只会在特定的位置生成OopMap，这种位置被称为安全点。一般安全点位置的选取基本上是遵循“是否能够让程序长时间执行的特征”为标准的，因此，一般会在方法调用、循环跳转、异常跳转等指令时，才会产生安全点。</p>
+<p>安全点的定义有了，还有一个问题就是如何在垃圾回收时，让所有的线程都在最近的的安全点停下来。<br>
+目前主要采用两种方案，抢先式中断和主动式终端，抢先式终端不需要线程的执行代码进行配合，在垃圾回收时，系统首先让所有的用户线程终端，然后如果发现有线程终端点不在安全点上，就恢复这个线程，让他一会再重新终端，直到跑到安全点上，目前基本没有虚拟机采用抢先式中段来暂停线程响应GC事件。</p>
+<p>主动式终端是在垃圾回收需要中断线程的时候，不对线程操作，而是仅仅设置一个标志位，各个线程执行的时候要不断的轮询这个标志位，一但发现中断标志为真，那就自己在最近的安全点上主动挂起。</p>
+<p>因为轮询需要频繁出现，因此必须足够高效，HotSpot通过内存保护陷阱的方式，将操作精简到了一条汇编指令。</p>
+<h2 id="安全区域">安全区域</h2>
+<p>如果一个线程在垃圾回收发生时，正处于sleep或者阻塞状态，就必须要引入安全区域来解决这种情况。<br>
+安全区域是指的能确保在某一段代码片段中，引用关系不会发生变化。 因此在这个区域内任意地方开始垃圾收集都是安全的。</p>
+<p>当用户线程执行到安全区域里的代码时，首先会标识自己已经进入了安全区域，这时候垃圾收集就不需要关心这个线程了，当线程要离开这个区域的时候，必须要检查虚拟机是否已经完成了根节点枚举。如果完成了，就继续执行，否则，就要阻塞知道收到离开安全区域的信号。</p>
+<h2 id="记忆集与卡表">记忆集与卡表</h2>
+<p>为了解决跨代引用的问题，垃圾收集器在新生代中建立了记忆集的结构，以避免整个老年代都被加进 GC Roots的扫描范围。 事实上，并不仅是新生代和老年代之间才存在跨代引用，所有涉及到分区域收集的收集器，都会有相同问题。</p>
+<p>记忆集通常不会直接记录所有存在跨代引用的对象，而是通过卡表的方式，更粗粒度的记录哪一个范围的非收集区域存在指向收集区域的指针就可以了。</p>
+<p>卡表就是一种常见的记忆集实现形式， 卡表的每一项元素都对应着内存区域中一块特定大小的内存块，这个内存块被称为卡页，一把来说，卡页大小都是2的N此幂。 卡表一般都设计成一个字节数组。<br>
+<img src="https://gaoliang.me/post-images/1584264190400.png" alt="" loading="lazy"><br>
+一个卡页的内存中通常包含不止一个对象，只要卡页内有一个（或更多）对象的字段存在着跨代指针，那就将对应卡表的数组元素的值标识为1，称为这个元素变脏（Dirty）。</p>
+<h2 id="写屏障">写屏障</h2>
+<p>通过上面的方式，已经解决了GC Roots扫描范围的问题。 但是卡表谁来维护呢？<br>
+HotSpot虚拟机是通过写屏障（Write Barrier）技术来维护卡表状态的。 写屏障可以看作是虚拟机层面堆引用类型字段赋值这个操作的AOP切面，在引用对象赋值时会产生一个环形通知，供程序执行二外的动作。</p>
+<h2 id="并发的可达性分析">并发的可达性分析</h2>
+<p>并发的可达性分析可能会导致两个问题，一种是把原本消亡的对象错误标记为存活，这不是好事，但其实是可以容忍的，只不过产生了一点逃过本次收集的浮动垃圾而已，下次收集清理掉就好。另一种是把原本存活的对象错误标记为已消亡，这就是非常致命的后果了，程序肯定会因此发生错误。<br>
+<img src="https://gaoliang.me/post-images/1584265987274.png" alt="" loading="lazy"></p>
+<p>Wilson于1994年在理论上证明了，当且仅当以下两个条件同时满足时，会产生“对象消失”的问题，即原本应该是黑色的对象被误标为白色：</p>
+<ul>
+<li>赋值器插入了一条或多条从黑色对象到白色对象的新引用；</li>
+<li>·赋值器删除了全部从灰色对象到该白色对象的直接或间接引用。<br>
+为了解决这种问题， 只要破坏这两个条件中的任意一个即可，因而出现了两种解决方案，增量更新和原始快照。</li>
+</ul>
+<p>增量更新主要是破坏第一个条件，新增引用时，将引用记录下来，当并发扫描结束后，再将这些记录过的引用为根，重新扫描一次。</p>
+<p>原始快照主要是破坏第二个条件，当灰色对象要删除指向白色对象的引用的时候，就将这个要删除的引用记录下来，在并发扫描结束后，再重新将这些记录过的引用关系为跟，重新扫描一遍。 即手动恢复到开始扫描那一刻的快照图进行搜索。</p>
+<p>CMS是基于增量跟新的，G1和Shenandoah是基于原始快照的。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-垃圾回收概念]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-la-ji-hui-shou-gai-nian/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-la-ji-hui-shou-gai-nian/">
+        </link>
+        <updated>2020-03-15T07:28:39.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="分代收集理论">分代收集理论</h2>
+<p>分代收集理论是建立在经验法则上的，基于两个假说</p>
+<ol>
+<li>若分代假说：绝大多数对象都是照生夕灭的</li>
+<li>强分代假说：熬过越多次垃圾收集过程的对象就越难以消亡<br>
+设计者一般把Java堆划分为新生代和老年代两个区域，因而才有了“Minor GC”,&quot;Major GC&quot;, &quot;Full GC&quot;等分类类型的划分。</li>
+</ol>
+<p>假如现在要进行一次只局限于新生代区域的GC，但新生代内存中的对象是完全有可能被老年代所持有的，为了找到该区域存活的对象，不得不在固定的GC Roots之外，再额外遍历一遍整个老年代来确定正确性，反之也要一样，但是这无疑导致了很大的性能负担。 因此，为了解决这个问题，就需要对分代收集理论添加第三条经验法则：<br>
+3. 跨代引用假说：跨代引用相对于同代引用来说，仅占极少数</p>
+<p>依据这个假说，我们就不应该再为了少量的跨代引用区扫描整个老年代了，也不必浪费空间专门记录每个对象是否存在以及存在哪些跨代引用，只需要再新生代上建立一个全局的数据结构（记忆集，Remebered Set），这个结构把老年代划分为螺杆个小块，标识出老年代中哪一块内存会存在跨代引用，此后发生Minor GC时间，只有包含了跨代引用的小块内存里的对象才会被加入到GC Roots中进行扫描。虽然这种方法需要在对象改变引用关系时，维护记录数据的正确性，而导致一部分运行时开销，但是相较于扫描整个老年代老说还是更划算的。</p>
+<p>定义：</p>
+<ul>
+<li>新生代收集（Minor GC/Young GC): 指的目标是只是新生代的收集</li>
+<li>老年代收集（Major GC/Old GC): 只目标只是老年代的收集，目前只有CMS收集器会有单独收集老年代的行为。</li>
+<li>混合收集（Mixed GC): 指的是收集整个新生代以及部分老年代的垃圾收集，目前只有G1收集器会有这种行为</li>
+<li>整堆收集（Full GC): 收集整个Java堆和<strong>方法区</strong>的垃圾收集</li>
+</ul>
+<h2 id="标记-清除算法">标记-清除算法</h2>
+<p>最基础的收集算法， 首先标记出所有需要回收的对象，在标记完成后，统一回收掉所有被标记的对象，也可以反过来，标记存活的对象，统一回收所有未被标记的对象。</p>
+<p>回导致内存不连续。</p>
+<h2 id="标记复制算法">标记复制算法</h2>
+<p>将内存空间分为两块，标记之后直接将存货的对象复制到新的空间，再把已使用过的一半空间直接清空。<br>
+由于新生代中的对象大部分都熬不过第一轮收集， 因此并不需要按照1：1的比例来划分新生代的内存空间，以减少浪费。</p>
+<p>因此，提出了一种新的半区复制分代策略，现在称之为“Appel式”回收 HotSpot虚拟机的Serial、ParNew等新生代收集器均采用这种策略。</p>
+<p>具体做法是，将新生代划分为Eden空间和两块较小的Survivor空间，每次复制只使用Eden空间和其中一块Survivor。 发生垃圾收集时，将Eden和Survivor中仍然存活的对象一次复制到另一块Survivor空间上，然后直接清理掉Eden和已经使用过的那一块Survivor空间。 HotSpot虚拟机默认的Eden和Survivor的大小比例是8：1，即每次新生代中可以用内存空间为整个新生代空间的90%，只有一个Survivor空间，即10%的新生代是被浪费的。但是这是根据经验法则来设定的，存在一种情况的安全设计，例如当Survivor空间不足以容纳一次Minor GC后存活的对象时，就需要以来其他内存区域（实际上大多是老年代）来进行分配担保。</p>
+<h2 id="标记整理算法">标记整理算法</h2>
+<p>在标记之后将存活的对象重新排列。 但是这种操作是一种很重的操作，需要暂停全部用户应用程序才能进行。 “Stop The World”。这样提高了回收时的复杂度，但是降低了对象内存分配时的复杂度。 对象分配的频率是一般是高于垃圾收集频率的。  HotSpot里，Parallel Scavenge收集器是基于标记-整理算法的，关注延迟的CMS是基于标记清楚算法的。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-HotSpot虚拟机对象]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-xu-ni-ji-dui-xiang/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-xu-ni-ji-dui-xiang/">
+        </link>
+        <updated>2020-03-15T07:00:02.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="当我们写下一个new关键字时发生了什么">当我们写下一个new关键字时，发生了什么？</h2>
+<p>虚拟机遇到一个new指令时，先会去检查这个指令的参数是否能够在常量池中定位到一个类的符号引用，然后检查这个类是否被加载、解析和初始化过，如果没有，那么执行该过程。</p>
+<p>检查通过后，虚拟机要为新生对象分配内存，内存的大小在类加载完成的时候就已经可以完全确定了，所以内存分配的任务是把等同于对象大小的一块内存从Java堆中划分出来。</p>
+<p>此时需要考虑一个问题，由于对象创建是一个非常频繁的行为，即使仅仅是修改一个指针的位置，在并发情况下也并不是线程安全的。对于这种情况，通常由两种可选方案，一种是通过CAS配合重试保证更新操作的原子性，另一种则是把内存分配的动作按照线程划分在不同的空间之中进行，即每个线程在Java堆中都预先分配一小块内存，称之为本地线程分配缓冲（ThreadLocal Allocation Buffer, TLAB），哪个线程需要分配内存时，优先在TLAB中分配，只有本地缓冲区用完了，分配新的缓冲区时，才需要同步锁定，可以通过JVM参数来决定是否使用TLAB。</p>
+<p>接下来对对象进行必要的设置，例如这个对象是哪个类的实例，如何才能找到类的元数据信息，对象的GC分代年龄等信息，这些信息存放在对象的对象头中。 根据虚拟机当前运行状态的不同，例如是否使用偏向锁等，对象头会由不同的设置方式。</p>
+<p>此时，所有的字段都是默认的初始值。new指令之后会接着调用<code>&lt;init&gt;()</code>方法，按照程序员的意愿对对象进行初始化。</p>
+<h2 id="对象的内存布局">对象的内存布局</h2>
+<p>在HotSpot虚拟机中，对象代内存中的存储布局可以划分为三个部分，对象头（Header），实例数据（Instance Data）和对齐填充（Padding）。</p>
+<p>对象头部分包括两类信息，第一类是用于存储对象自身的运行时数据，例如HashCode, GC分代年龄，锁状态标志，线程持有的锁，偏向线程ID，偏向时间戳等，这部数据的长度在32位和64位虚拟机中，分别为32个bit和64个bit，官方称之为“Mark Word”。 对象要存储的运行时数据很多，其实已经超过了32、64位Bitmap结构的空间效率，Mark Word被设计成一个有着动态定义的数据结构，以便在极小的空间内存储尽量多的数据，会根据对象的状态复用自己的存储空间。</p>
+<p>对象头的另一个部分是类型指针，即对象指向他的类型元数据的指针，Java虚拟机通过这个指针来确定对象是哪个类的实例。 并不是所有的虚拟机实现都必须保留类型指针，例如通过句柄来实现的，就不需要。 此外，如果对象是一个Java数组，那么在对象头中还必须要有一块记录数组长度的数据。</p>
+<p>对象头之后是对象真正存储的有效信息，即程序代码里所定义的各个类型的字段内容，无论是从父类继承下来的，还是在子类中定义的字段都必须记录下来。</p>
+<p>第三部分是对齐填充，这并不是必然存在的，也没有特别的含义，仅仅是起着占位符的作用。 HotSpot虚拟机内存管理要求对象的启始地址必须是8的整数倍，所以任何对象的大小都必须是8的整数倍。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-方法调用与虚方法表]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-fang-fa-diao-yong-yu-xu-fang-fa-biao/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-fang-fa-diao-yong-yu-xu-fang-fa-biao/">
+        </link>
+        <updated>2020-03-15T05:47:44.000Z</updated>
+        <content type="html"><![CDATA[<p>JVM字节码中，共有五种指令来实现方法的调用</p>
+<ol>
+<li>invokevirtual 为最常见的情况，用于调用所有的虚方法</li>
+<li>invokespecial 是作为对 private 和构造方法<code>&lt;init&gt;()</code>的调用，以及父类中的方法的调用</li>
+<li>invokeinterface 的实现跟 invokevirtual 类似，用于调用接口方法，会在运行时再确定一个实现该接口的对象。</li>
+<li>invokestatic 是对静态方法的调用。</li>
+<li>invokedynamic 先在运行时动态解析出调用点限定符所引用的方法，然后再执行该方法</li>
+</ol>
+<h2 id="解析调用">解析调用</h2>
+<p>我们知道，在class文件中，所有的方法调用都是一个常量池中的符号引用。 在类的解析阶段，会将其中的一部分符号引用转换为直接引用，这种解析能够成立的前提是方法在真正运行之前就有一个可确定的调用版本，并且这个版本是在运行期间不可变的。 这类方法的调用被称为解析（Resolution）</p>
+<p>使用invokestaic和invokespecial指令调用的方法，都是可以在class文件的解析阶段中确定唯一的调用版本的，java语言中符合这种条件的方法一共有四种，包括静态方法，私有方法，实例方法，父类方法。非此四类方法会存在多态的情况，因此无法在解析阶段就确定方法的唯一调用版本。</p>
+<p>除了被invokestatic和invokespecial指令调用的方法外，还有被final修饰的方法，因为其无法被继承，所以也可以被解析调用。但是final方法是使用invokevirtual指令进行调用的。</p>
+<p>解析调用是一个静态的过程，在编译期间就可以完全确定，在类加载的阶段会把涉及到的符号引用完全转换为明确的直接引用，无需延迟到运行期间进行动态处理。</p>
+<h2 id="动态分派dispatch">动态分派（Dispatch）</h2>
+<p>因为Java是一门面向对象的程序语言，所以具有继承、封装、多态三个特征，分派调用过程就是多态性的提现。</p>
+<h3 id="静态分派">静态分派</h3>
+<p>首先要理解静态类型和实际类型的关系</p>
+<pre><code class="language-java">class Human{};
+class Man extends Human{};
+Human man = new Man();
+</code></pre>
+<p>在上述代码中，Human被成为man的静态类型，而Man则是man的实际类型。静态类型在编译期间是可知的，但是实际类型在编译期间是不可知的，例如下面这个例子</p>
+<pre><code class="language-java">Human human = (new Random()).nextBoolean() ? new Man() : new Woman();
+public static sayHello(Human human){human.sayHello();}
+public static sayHello(Man man){man.sayHello();}
+public static sayHello(Woman woman){woman.sayHello();}
+</code></pre>
+<p>编译期间，编译器会根据对象的静态类型去选择使用方法的哪个重载版本，在上述方法中，如果我们调用<code>sayHello(human)</code>，必定是调用的父类Human的sayHello方法，因为javac编译器会根据静态类型选择合适的重载版本。</p>
+<h3 id="动态分派">动态分派</h3>
+<p>动态分派主要体现在方法重写(Overide)上。</p>
+<pre><code class="language-java">public class DynamicDispatch {
+    static abstract class Human {
+        protected abstract void sayHello();
+    }
+    static class Man extends Human {
+        @Override
+        protected void sayHello() {
+            System.out.println(&quot;man say hello&quot;);
+        }
+    }
+    static class Woman extends Human {
+        @Override
+        protected void sayHello() {
+            System.out.println(&quot;woman say hello&quot;);
+        }
+    }
+    public static void main(String[] args) {
+        Human man = new Man();
+        Human woman = new Woman();
+        man.sayHello();
+        woman.sayHello();
+        man = new Woman();
+        man.sayHello();
+    }
+}
+</code></pre>
+<p>这个例子，最终会输出</p>
+<pre><code class="language-bash">man say hello
+woman say hello
+woman say hello
+</code></pre>
+<p>这是由于，此时选择方法的调用版本时，不在是根据静态类型来决定的，而是根据实际类型。<br>
+查看这个方法的字节码，可以发现调用sayHello方法时间，生成的字节码是invokevirtual，invokevirual方法并不是把常量池中方法的符号引用解析到直接引用上就结束了，还会根据方法接收者的实际类型来选择方法版本，这就是Java语言中方法重写的本质。<br>
+invokevirutal指令运行时解析的过程大概分为四个步骤</p>
+<ol>
+<li>找到操作数栈顶的第一个元素所指向的实际类型，计做C</li>
+<li>如果在类型C中找到了与常量的描述符和简单方法都相符的方法，则进行权限校验，通过则返回引用，查找结束，否则返回<code>java.lang.IllegalAccessError</code>异常。</li>
+<li>否则，按照继承关系从下往上查找C的各个父类进行第二步的搜索验证</li>
+<li>如果没有找到合适的方法，则抛出<code>java.lang.AbstarctMethodError</code>异常</li>
+</ol>
+<p>字段是没有多态性的</p>
+<h3 id="虚拟机动态分配的实现">虚拟机动态分配的实现</h3>
+<p>动态分派是一个非常频繁的动作，而且动态分派需要在接收者类型的方法元数据中搜索合适的目标方法，因此Java虚拟机为了优化性能，运行时一般不会如此品牌的搜索类型元数据。</p>
+<p>通常，会通过建立一个虚方法表的方式，使用虚方法表索引来代替元数据查找以提高性能。<br>
+虚方法表中存放着各个方法的实际入口地址。如果某个方法在子类中没有被重写，那子类的虚方法表中的地址入口和父类相同方法的地址入口是一致的，都指向父类的实现入口。如果子类中重写了这个方法，子类虚方法表中的地址也会被替换为指向子类实现版本的入口地址。虚方法表一般在类加载的连接阶段进行初始化，准备了类的变量初始值后，虚拟机会把该类的虚方法表也一同初始化完毕。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JVM从0到1-运行时栈帧结构]]></title>
+        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-yun-xing-shi-zhan-zheng-jie-gou/</id>
+        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-yun-xing-shi-zhan-zheng-jie-gou/">
+        </link>
+        <updated>2020-03-14T10:58:47.000Z</updated>
+        <content type="html"><![CDATA[<p>栈帧存储了方法的局部变量表、操作数栈、动态连接和方法返回地址等信息。每一个方法从调用开始至执行结束的过程，都对应着一个栈帧在虚拟机栈里面从入栈到出栈的过程。在编译Java程序源码的时候，栈帧中需要多大的局部变量表，需要多深的操作数栈就已经被分析计算出来，并且写入到方法表的Code属性之中。</p>
+<p>一个线程中的方法调用链可能会很长，从Java程序的角度看，同一时刻，同一个线程里，在调用堆栈的所有方法都同时处于执行状态。但是对于JVM的执行引擎来说，在活动线程中，只有位于栈顶的方法才是生效的，被称作当前栈帧(Current Stack Frame),与这个栈帧所关联的方法被称作当前方法，执行引擎所运行的所有字节码指令都是针对当前栈帧。<br>
+<img src="https://gaoliang.me/post-images/1584183796083.png" alt="" loading="lazy"></p>
+<h2 id="局部变量表local-variables-table">局部变量表（Local Variables Table）</h2>
+<p>局部变量表是以组变量值的存储空间，用于存放方法参数和方法内部定义的局部变量，在Java程序被编译为class文件时，就在方法的Code属性的max_locals数据项中明确了该方法所需要的局部变量表的最大容量。</p>
+<p>局部变量表的容量以变量槽（Variable Slot）为最小单位，每个变量槽都应该能存放一个boolean、byte、char、short、int、float、reference或returnAddress类型的数据。所以大多数虚拟机使用32位长度来作为一个槽的大小，但是虚拟机规范并没有明确说明槽的大小。</p>
+<p>reference表示对一个对象实例的引用，虚拟机规范并没有说明他的长度，也没有明确指出这种引用应有什么样的结构。 但是一般要求至少通过这个引用可以获取数据存放的起始地址以及这个对象所属的数据类型在方法区中存储的类型信息。 returnAddress类型已经很少见了。</p>
+<p>Java虚拟机通过索引定位的方式使用局部变量表，索引值的范围是从0开始至局部变量表的最大的变量槽地址，如果是32位数据，则索引N代表使用第N个变量槽，如果是64位的数据，则说明会同时使用N和N+1两个变量槽。</p>
+<p>当一个方法被调用时，Java虚拟机会使用局部变量表来完成参数值到参数变量表列表的传递过程，即实参到形参的传递。如果是实例方法，那么局部变量表的第0位索引是this对象本身的引用，其余参数按照参数表顺序排列，占用从1开始的局部变量槽，参数表分配完成后，再根据方法体内定义的变量顺序和作用域分配其他的变量槽。</p>
+<p>为了尽可能的节省栈帧的内存空间，局部变量表中的变量槽是可以重用的，当当前字节码PC计数器的值已经超过了某个变量的作用域，那么这个变量对应的槽就可以交给其他变量来重用。</p>
+<p>还有一点需要注意的是，局部变量不像类变量一样存在准备阶段。</p>
+<h2 id="操作数栈operand-stack">操作数栈（Operand Stack）</h2>
+<p>操作数栈是一个后入先出的栈，和局部变量表一样，他的最大深度也是在编译时就被写道Code属性的max_stacks数据项中的。 操作数栈的每一个元素都可以是包括long和double在内的任意java数据类型，32位数据类型占据1个栈容量，64位占据2个栈容量。</p>
+<h2 id="动态连接dynamic-linking">动态连接（Dynamic Linking）</h2>
+<p>每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，持有这个引用是为了支持方法调用过程中的动态连接。</p>
+<h2 id="方法返回地址">方法返回地址</h2>
+<p>当一个方法开始执行之后，只有两种方式退出这个方法，一个是执行引擎遇到任意一个方法返回的字节码指令，这时候可能会有返回值传递给上层的方法调用者，这种退出方式称为正常调用完成。</p>
+<p>另外一种退出方法是在内部执行的过程中遇到了异常，而且这个异常没有在方法体内得到妥善的处理。 一个方法以异常完成出口的方式退出，是不会给他的上层调用者任何返回值的。</p>
+<p>无论任何方式退出，在退出之后，都必须要返回到最初方法被调用的地方，程序才能继续执行。方法返回时可能需要再栈帧中保存一些信息，用来帮助恢复它的上层主调方法的执行状态，一般来说，方法正常退出时，主调方法的PC计数器的值就可以作为返回地址，栈帧中很可能会保存这个计数器值。而方法异常退出时，返回地址是由异常处理器表来确定的，栈帧中一般不会保存这部分信息。</p>
+<p>方法退出的过程等同于把当前栈帧出栈，因此退出时可能的操作由：恢复上层方法的局部变量表和操作数量栈，将返回值压入调用栈帧的操作数栈中，调整pc计数器的值以指向调用指令后面的一条指令等。</p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[JVM从0到1-类加载器]]></title>
         <id>https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/</id>
@@ -194,545 +507,6 @@ public class NotInitialization_3 {
 <h2 id="附录-预定义属性列表">附录 预定义属性列表</h2>
 <p><img src="https://gaoliang.me/post-images/1584173919837.png" alt="" loading="lazy"><br>
 <img src="https://gaoliang.me/post-images/1584173926306.png" alt="" loading="lazy"></p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[JVM从0到1-class文件常量池]]></title>
-        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/</id>
-        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/">
-        </link>
-        <updated>2020-03-14T04:50:34.000Z</updated>
-        <content type="html"><![CDATA[<p>常量池可以比喻为class文件里的资源仓库，他是class文件结构中与其他项目关联最多的数据，通常也是占据class文件空间最大的项目。</p>
-<p>由于常量池中的常量的数量是不固定的，所以在入口处需要防止一个u2类型的数据，代表常量池容量计数器。需要注意的是，这个计数器从1开始，而不是0，所以常量池计数器的值，实际表示的常量池中的常量数量+1。</p>
-<p>常量池中主要存放两种常量，字面量（Literal）和符号引用（Symbolic References)。字面量比较接近Java语言层面常量的概念，而符号引用则属于编译原理方面的概念，主要包括一下几种</p>
-<ul>
-<li>被模块导出或者开放的包（Package）</li>
-<li>类和接口的全限定名（Full Qualified Name）</li>
-<li>字段的名称和描述（Descriptor）</li>
-<li>方法的名称和描述</li>
-<li>方法句柄和方法类型（Method Handle，Method Type, Invoke Dynamic）</li>
-<li>动态调用点和动态常量（Dynamically-Computed Call Site、Dynamically-computed Constant）<br>
-Javac编译器没有连接这一个步骤，而是在虚拟机加载class文件时及逆行动态连接的，所以class文件中没有保存各个方法、字段在内存中的布局信息，这些字段、方法的引用是在虚拟机运行期间进行转换的。</li>
-</ul>
-<p>常量池中的每一个项目都是一个表，最初设计中只有11种，后续不断扩展，截至到JDK13，常量表中共有17中不同类型的常量。</p>
-<figure data-type="image" tabindex="1"><img src="https://gaoliang.me/post-images/1584163304921.png" alt="" loading="lazy"></figure>
-<p>这其中的每一种类型，都具有独立的结构，因此常量池的结构十分复杂。</p>
-<h2 id="constant_utf8_info">CONSTANT_Utf8_info</h2>
-<p><img src="https://gaoliang.me/post-images/1584163919336.png" alt="" loading="lazy"><br>
-legth说明这这个UTF-8编码的字符串长度是多少字节，他后面紧跟着的是长度为length个字节的UTF-8缩略编码的连续数据。 UTF-8缩略编码与普通UTF-8编码的区别是：从'\u0001'到'\u007f'之间的字符（相当于1～127的ASCII码）的缩略编码使用一个字节表示，从'\u0080'到'\u07ff'之间的所有字符的缩略编码用两个字节表示，从'\u0800'开始到'\uffff'之间的所有字符的缩略编码就按照普通UTF-8编码规则使用三个字节表示。</p>
-<p>由于class文件中方法和字段等都需要引用这个类型的常量来描述名称，所以这个常量的最大长度也就是Java中方法和字段的最大长度，u2，这也就意味着最大值为65535。所以这也意味着Java程序中变量和方法名的大小无法超过64KB。</p>
-<h2 id="constant_class_info">CONSTANT_Class_info</h2>
-<p><img src="https://gaoliang.me/post-images/1584169090290.png" alt="" loading="lazy"><br>
-这种常量表示一个类或者接口的符号引用，其中，name_index是常量池的索引，指向一个常量池中的CONSTANT_Utf8_info类型常量，代表了这个类的全限定名。在字段表、方法表、和属性表中，会引用常量表中的符号引用来进行表达。</p>
-<h2 id="其他字段结构">其他字段结构</h2>
-<p><img src="https://gaoliang.me/post-images/1584169300526.png" alt="" loading="lazy"><br>
-<img src="https://gaoliang.me/post-images/1584169307922.png" alt="" loading="lazy"><br>
-<img src="https://gaoliang.me/post-images/1584169312061.png" alt="" loading="lazy"></p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[JVM从0到1-class文件结构初探]]></title>
-        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/</id>
-        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/">
-        </link>
-        <updated>2020-03-13T16:07:18.000Z</updated>
-        <content type="html"><![CDATA[<p><img src="https://gaoliang.me/post-images/1584115711377.png" alt="" loading="lazy"><br>
-class文件是一组以8个字节为基础单位的二进制流，各个数据项紧凑排列，没有任何分隔符，当遇到需要占用8个字节以上空间的数据项时，会采用<a href="https://www.ruanyifeng.com/blog/2016/11/byte-order.html">大端原则</a>进行排列，即高位在前。</p>
-<p>class文件采用了一种类似C语言结构体的伪结构来存储数据，这个伪结构中，只有两种基本的数据类型，&quot;无符号数&quot;和&quot;表&quot;。</p>
-<p>无符号数属于基本数据类型，用u1，u2，u4，u8分别来表示1、2、4、8个字节的无符号数，这些无符号数可以用来描述数字、索引引用、数值量或者按照UTF-8编码构成的字符串。</p>
-<p>表是由多个无符号数或其他表作为数据结构的复合数据结构，为了便于区分，这里给命名加上了后缀&quot;_info&quot;。整个class文件也可以看作是一张表。</p>
-<p>无论是无符号数还是标配，当需要描述同一个类型的但是数量不定的数据时，经常会前置一个计数器。<br>
-<img src="https://gaoliang.me/post-images/1584115760585.png" alt="" loading="lazy"></p>
-<h2 id="魔数与class文件版本">魔数与Class文件版本</h2>
-<p>class文件的魔数是 0xCAFEBABE(咖啡宝贝？?) ，有兴趣可以查一下这个数字的来历。 魔数占据了4个字节。</p>
-<p>紧接着的是class文件版本号，其中第5、6个字节是次版本号，第7、8个字节是主版本号。 JDK8的版本号是0x00000034，即52.00。 大版本号随着JDK大版本的发布加1。 Java虚拟机规范要求，高版本的JDK能兼容之前版本的class文件，但强制要求不能运行以后任何版本的class文件，即使其中的内容旧版本的jdk也完全可以解析。</p>
-<h2 id="常量池">常量池</h2>
-<p>紧接着的两个字节，是常量池计数器(constant_pool_count)，需要注意的是，这个计数器的值和java中的习惯不同，容量计数是从1开始而不是0开始的，所以其值的大小等于常量池中的成员数+1。 class文件中，只有常量池计数器的是从1开始的。</p>
-<p>常量池中主要存放两大类常量，字面量(Literal)和符号引用(Symbolic References)，字面量比较接近Java语言中常量的概念，例如文本字符串，被声明为final的常量值等。 符号引用属于编译原理方面的概念，主要包括下面几种常量：</p>
-<ul>
-<li>被模块导出或者开放的包（Package）</li>
-<li>类和接口的全限定名（Full Qualified Name）</li>
-<li>字段的名称和描述（Descriptor）</li>
-<li>方法的名称和描述</li>
-<li>方法句柄和方法类型（Method Handle，Method Type, Invoke Dynamic）</li>
-<li>动态调用点和动态常量（Dynamically-Computed Call Site、Dynamically-computed Constant）</li>
-</ul>
-<p>Java在进行编译时，并没有C和C++的连接这个步骤，连接是在class文件加载的时候动态进行的，所以class文件不会保存各个方法和字段最终在内存中的布局，这些个字段、方法的符号引用如果不经过虚拟机的转换是无法获得真正的内存入口的。 Java虚拟机在加载类时，会从常量池中获得对应的符号引用，再在类创建时运或者运行时解析、翻译到具体的内存地址中。</p>
-<p>常量池的每一项都是一个表，而且目前共有17中不同类型的常量，所以常量池是最繁琐的数据，这部分内容会在下一篇中单独介绍。</p>
-<h2 id="访问标志access_flags">访问标志(access_flags)</h2>
-<p>紧接着常量池的是访问标志，占用两个字节，这个标志用于识别一些类或者接口的访问信息，例如，这个class是类还是接口，是否是public，是否为abstract，是否被声明为final，是否是注解，是否是枚举，是否是非用户产生的class，是否是模块，等等。</p>
-<h2 id="类索引-父类索引和接口索引集合">类索引、父类索引和接口索引集合</h2>
-<p>类索引（this_class）和父类索引(super_class)都是一个u2类型的数据，接口索引集合（interfaces）则是以组u2类型的数据的集合，class文件中由着三项数据来确定类的继承关系。类索引用于确定这个类的全限定名，父类索引用于确定这个父类的全限定名，接口索引集合就是用来描述这个类实现了哪些接口。</p>
-<p>对于接口索引集合，入口的第一个u2类型的数据为接口计数器，表示索引表的容量。</p>
-<p>通过索引的值，到常量池中查找对应类的全限定名。</p>
-<h2 id="字段表集合field_info">字段表集合(field_info)</h2>
-<p>字段表用于描述接口或类中声明的变量（不包括方法内部声明的局部变量）。对一个字段的描述包括，作用域（public，private，protected），是类级还是实例级变量（static），是否可变（final），并发可见性（volatile），是否可被序列化（transient修饰符），字段数据类型（基本类型、对象、数组），字段名称。 其中，各种修饰符是否存在都可以用布尔值来表示，刚好可以采用标志位的方式来存储。而字段名，字段被定义为什么类型是无法固定的，所以只能引用常量池中的常量来描述。字段表的结构如下<br>
-<img src="https://gaoliang.me/post-images/1584158429668.png" alt="" loading="lazy"><br>
-其中字段修饰符（access_flags）是一个u2类型的数据结构，通过标志位的方式来实现对字段修饰符是否存在的表示。<br>
-<img src="https://gaoliang.me/post-images/1584158539555.png" alt="" loading="lazy"></p>
-<p>access_flags后是name_index和descriptor_index，都是对常量池项的引用，分别代表字段的简单名称以及字段和方法的描述符。</p>
-<p>全限定名把类全名中的<code>.</code>替换为<code>/</code>, 简单名称是指的没有类型和参数修饰符的方法或者字段名称，例如<code>inc()</code>方法和<code>m</code>字段的简单名称就是&quot;inc&quot;和&quot;m&quot;。</p>
-<p>相较于简单名，方法和字段的描述符则较为复杂，描述符的作用是来描述字段的数据类型、方法的参数列表（包括数量，类型和顺序）以及返回值。 根据描述符的规定，基本数据类型(byte、char、double、float、int、long、short、boolean)以及代表无返回值的void类型都是用一个大写字符来表示，而对象类型则用字符<code>L</code>加对象的全限定名来表示。</p>
-<figure data-type="image" tabindex="1"><img src="https://gaoliang.me/post-images/1584158911864.png" alt="" loading="lazy"></figure>
-<p>对于数组类型，每个维度前使用一个前置的<code>[</code>来描述。</p>
-<p>用描述符描述方法时，按照先参数列表，后返回值的顺序描述，参数列表按照参数的严格顺序放在一组小括号中，然后是返回值，例如：方法<code>int indexOf(char[]source，int sourceOffset，int sourceCount，char[]target，int targetOffset，int targetCount，int fromIndex)</code>的描述符为“([CII[CIII)I”。</p>
-<p>字段表结束后，还有一个属性表集合，用于存储一些额外的信息，例如果将字段m的声明改为“final static int m=123；”，那就可能会存在一项名称为ConstantValue的属性，其值指向常量123。</p>
-<p>字段表不会列出从父类或者父接口中继承而来的字段，但是可能会出现原本Java代码中不存在的字段，例如在内部类中为了保持对外部类的访问性，会自动添加对指向外部类实例的字段。</p>
-<h2 id="方法表集合">方法表集合</h2>
-<p>方法表集合和字段表集合的内容几乎一致，依次包括访问标志（access_flags）、名称索引（name_index）、描述符索引（desciptor_index）、属性表集合（attributes）几项。</p>
-<p>由于方法和字段修饰符的不同，所以访问标记的含义也略有不同</p>
-<figure data-type="image" tabindex="2"><img src="https://gaoliang.me/post-images/1584159904681.png" alt="" loading="lazy"></figure>
-<p>至此，方法的定义就可以通过访问标志、名称索引、描述符索引来表达清楚了，但是方法里面的代码去哪了呢？ 方法里的Java代码，在经过javac编译器编译为字节码指令之后，存放在方法属性表集合中的一个<code>Code</code>的属性中，属性表经常作为class文件中最具扩展性的一种数据项目。</p>
-<p>与字段表集合相对应的，如果父类方法在子类中没有被重写(Override)，方法表集合中就不会出现来自父类的方法信息，但同样的，也有可能会出现由编译器自动添加的方法，最常见的边是类构造器<code>&lt;clinit&gt;()</code>和实例构造器<code>&lt;init&gt;()</code>方法。</p>
-<p>Java方法中，重载(Overload)一个方法，要求其简单名相同之外，害要求必须拥有一个与原方法不同的特征签名，特征签名是指一个方法中各个参数在常量池中的字符引用的集合，也正是因此，返回值不包含在特征签名中。</p>
-<h2 id="属性表集合">属性表集合</h2>
-<p>属性表（attribute_info）在前面的讲解中已经出现过多次，class文件、字段表、方法表都可以由自己写带的属性表集合，以描述某些场景专有的信息。虚拟机规范对属性表的限制稍微宽松一些，不要求各个属性具有严格顺序，而且只要不与已有属性崇明，任何人实现的编译其都可以向属性表中写入自己定义的属性信息，Java虚拟机运行时，会忽略它不认识的属性。</p>
-<p>对于每一个属性，他的名称都要从常量池中引用一个CONSTANT_Utf8_info类型的常量来表示，而属性值的结构是完全自定义的，只需要通过一个u4长度属性来表明属性值所占用的位数即可。<br>
-<img src="https://gaoliang.me/post-images/1584160830127.png" alt="" loading="lazy"></p>
-<p>对于属性表详细的解释，会在下一篇中进行介绍。</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[JVM从0到1-内存划分]]></title>
-        <id>https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/</id>
-        <link href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/">
-        </link>
-        <updated>2020-03-13T15:10:49.000Z</updated>
-        <content type="html"><![CDATA[<p>jvm运行时会把内存分为多个数据区域，根据《java虚拟机规范》规定，可以划分为方法区，堆，虚拟机栈，本地方法栈和程序计数器，其中方法区和堆是所有线程所共享的，其他则是每个线程隔离的。<br>
-<img src="https://gaoliang.me/post-images/1584113372648.png" alt="" loading="lazy"></p>
-<h2 id="程序计数器">程序计数器</h2>
-<p>其中记录的是当前所执行的字节码的行号，字节码解释就是通过改变这个计数器来完成包括分支、跳转、循环、异常、线程恢复等基本功能的。当线程执行的是 本地方法时，这个计数器的值为空。 这个区域是《java虚拟机规范》中唯一一个没有规定OOM情况的区域。</p>
-<h2 id="java虚拟机栈">Java虚拟机栈</h2>
-<p>每个Java方法被执行时，虚拟机都会同步创建一个栈帧，用于存储局部变量表，操作数栈，动态链接，方法出口等信息，一个方法被调用到执行结束的过程，也就对应着栈帧从入栈到出栈的过程。</p>
-<p>《java虚拟机规范》规定这个区域会存在两种一场，栈深度大于虚拟机允许深度时，抛出StackOverFlowError，如果栈容量可以动态扩展，则当无法扩展时，抛出OOM异常。我们常用的HotSpot虚拟机栈容量是不会动态扩展的，但是这并不意味着就不会抛出OOM异常，如果线程申请栈空间失败了，也是会抛出OOM的。</p>
-<h2 id="本地方法栈">本地方法栈</h2>
-<p>和Java虚拟机栈类似，只是执行的是本地方法，虚拟机规范没有堆这一部分有强制规定，有些虚拟机（例如HotSpot直接把Java虚拟机栈和本地方法栈合并了）</p>
-<h2 id="java堆">Java堆</h2>
-<p>堆的唯一目的就是存放对象实例。其内部结构并没有进一步的细致划分，我们常说的新生代，老年代，永久代，Eden，Survivor等都是一部分垃圾收集器的设计风格，和虚拟机规范乃至虚拟机实现没有关系。</p>
-<p>从分配对象的角度看，所有线程共享的Java堆可以划分出多个线程私有的分配缓冲区（Thread Local Allocation Buffer, TLAB）用于提升对象分配的效率。 当Java堆中没有空间完成实例分配，而且堆的大小也没法继续扩展时，虚拟机会抛出OOM异常。</p>
-<h2 id="方法区">方法区</h2>
-<p>方法区和堆一样，也是各个线程共享的内存区域，这个区域用于存储已被虚拟机加载的类型信息、常量、静态变量、即时编译器（JIT）编译后的代码缓存等数据。Java虚拟机规范中，把方法区描述为堆的一个逻辑部分，但是他取有一个别名“非堆”（Non-Heap）。<br>
-说到方法区，就要提到“永久代”的概念，在JDK8以前，由于HotSpot虚拟机的流行，很多人直接把方法区称之为“永久代”，这种说法是错误的，仅仅是因为在当时HotSpot设计选择把垃圾回收分代的设计扩展到了方法区，或者说，是使用“永久代”来实现了方法区。 原则上，如何设计和实现方法区，Java虚拟机规范并没有要求。在JDK8时，HotSpot虚拟机已经完全抛弃了永久代的概念，改用在本地内存中实现的原空间（Meta Space）来代替。<br>
-Java虚拟机规范要求，当方法去无法满足新内存分配需求的时候，会抛出OOM</p>
-<h3 id="运行时常量池">运行时常量池</h3>
-<p>运行时常量池是方法区的一部分，Class文件中，除了类的版本、字段、方法、接口等描述信息外，还有一项是常量池表，用于存放在编译期间产生的各种字面量和符号引用，这部分内容会在类加载后存放到方法区的运行时常量池中。 Java虚拟机规范堆class文件的每个部分的格式都有要求，例如每个字节用于存储什么数据。 但是，对于运行时常量池，规范并没有给出细节的要求，所以不同的虚拟机实现会按照自己的设计来实现这个区域，一般来说，除了保存Class文件中的符号引用外，还会把由符号引用翻译而来的直接引用也存储到这个运行时常量池中来。</p>
-<p>运行时常量池的一个特点是具有动态性，并不要求常量必须在编译期产生，所以并非只有class文件常量池中的内容可以放入运行时常量池，也可以在运行期间放入新的常量，例如String类的intern()方法。</p>
-<h2 id="直接内存">直接内存</h2>
-<p>首先要注意，直接内存并不属于虚拟机运行时数据区的一部分，也不是虚拟机规范规定的内存区域，但是这一部分也会被频繁使用，也有可能导致OOM。</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Java 日志系统梳理]]></title>
-        <id>https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/</id>
-        <link href="https://gaoliang.me/post/java-ri-zhi-xi-tong-shu-li/">
-        </link>
-        <updated>2019-10-19T07:36:28.000Z</updated>
-        <content type="html"><![CDATA[<p><img src="https://gaoliang.me/post-images/1571471023093.png" alt="slf4j 桥接传统日志系统" loading="lazy"><br>
-<img src="https://gaoliang.me/post-images/1571471220440.png" alt="slf4j 桥接传统日志系统" loading="lazy"></p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[代理软件的代理模式介绍]]></title>
-        <id>https://gaoliang.me/post/ssr-v2ray-proxy-analysis/</id>
-        <link href="https://gaoliang.me/post/ssr-v2ray-proxy-analysis/">
-        </link>
-        <updated>2019-09-10T08:47:51.000Z</updated>
-        <content type="html"><![CDATA[<p>常用的代理软件，通常会有系统代理模式、PAC、代理规则等多项设置，这些设置通常都十分相近，容易混淆，所以做一次简单的梳理。<br>
-ssr-csharp，shadowsocks-windows<br>
-这两个 windows 软件，通常在右键菜单里会有<code>系统代理模式</code>、<code>PAC</code>、<code>代理规则</code>，三个关系到一个 url 是否会走代理的配置，为了搞清楚他们之间的关系，我们需要先知道系统代理和 PAC 是什么</p>
-<ol>
-<li>系统代理<br>
-一个操作系统，无论是 Windows、macOS、Linux 各个发型版本，都会有对应的系统级代理设置功能，这个设置是对所有运行在操作系统上的软件公开的，所有的软件都可以知道当前是否有系统代理可用，自己是否要使用系统代理。<br>
-例如，在 c# 中<pre><code class="language-c#">public static System.Net.IWebProxy GetSystemWebProxy();
-</code></pre>
-</li>
-</ol>
-<p>在我们常用的浏览器中，浏览器类的软件，通常都是默认如果你设置了系统代理，就会通过系统代理来访问外部网络，例如 Chrome、Firefox 等，都有这样的机制。 而其他的软件，通常也会设计自己的代理策略，例如走系统代理，不走系统代理，或者支持用户设置。 例如，下图中 Docker 的 macOS 客户端中，支持设置使用系统代理，但是不支持用户设置为不使用代理。<br>
-<img src="https://gaoliang.me/post-images/1568105455649.png" alt="Docker上的代理设置界面" loading="lazy"><br>
-另外，在早期版本的 windows 上，经常会看到一些软件代理设置中，有<code>使用 IE 代理</code>的选项，这是因为早期版本的 Windows，IE 代理设置和系统代理设置是同步的，IE 代理就是系统代理。目前新版本的 Windows 已经不再集成 IE, 所以 大部分软件现在都该叫系统代理设置了。例如下图早期版本的迅雷代理设置截图。<br>
-<img src="https://gaoliang.me/post-images/1568105326854.png" alt="早期版本的迅雷设置界面" loading="lazy"><br>
-2. PAC<br>
-要说 PAC，我们就要先了解代理有哪些模式。 打开 macOS 的代理配置界面，可以看到，有多种代理协议可选，常用的包括 HTTP，SOCKS5 等。如果我们设置 HTTP 或者 SOCKS5 代理，那么启用系统代理的应用，就会将所有的请求全部转发到这个代理服务器，通过代理服务器进行访问。通常这对应着我们的 ssr 客户端里的<code>系统代理模式-&gt; 全局模式</code>,这种模式下，使用系统代理的软件，所有的网络请求就全部会通过系统代理设置的代理服务器。</p>
-<p>接下来说 PAC，PAC 是 Proxy Auto-Config 的简写，系统代理可以选用这种模式。 PAC 的意思是代理自动配置，作用是是根据用户请求的地址，决定使用哪个代理服务器，PAC 通常是一个 js 脚本。 这个模式就对应 ssr <code>系统代理模式-&gt; PAC 模式</code> 在 Windows 的 ssr 客户端上，一般还支持设置不通的 PAC 规则， 例如<code>跳过局域网</code>，<code>跳过局域网和大陆IP</code>等，这些功能其实都是通过修改 PAC 的 js 脚本来实现的。<br>
-<img src="https://gaoliang.me/post-images/1568106773345.png" alt="PAC 代理设置" loading="lazy"></p>
-<p>知道了系统代理和 PAC 的概念之后，我们来看下 Windows 里面 ssr 客户端的设置<br>
-<code>系统代理模式-直连</code>：顾名思义，不设置任何系统代理，直接连接，不通过代理服务器。<br>
-<code>系统代理模式-全局</code>：全局模式会设置系统代理的 socks5 代理，所有使用系统代理的软件的所有请求，都会通过设置的代理服务器。<br>
-<code>系统代理模式-PAC</code>：设置系统代理走 PAC 模式，使用系统代理的软件发出的请求，会通过 PAC 进行自动代理切换。</p>
-<p>未完待续...</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[我与我的利器]]></title>
-        <id>https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/</id>
-        <link href="https://gaoliang.me/post/talking-about-me-and-my-favorite-toolset/">
-        </link>
-        <updated>2019-07-26T10:11:17.000Z</updated>
-        <content type="html"><![CDATA[<p>从 <a href="http://gridea.dev">Gridea</a>（一个静态博客写作客户端）作者<a href="https://fehey.com">海岛心hey</a>的博客看到<a href="https://liqi.io/community/">利器社群计划</a>后，感觉很有意思，自己也写了一篇，但是说来惭愧，自己算不上创造者，没有什么拿的出手的作品，就单纯的分享下自己的一些内容吧，当作本博客的「关于」也好。</p>
-<p>更新记录：</p>
-<blockquote>
-<ul>
-<li>2020 年 1 月 15 日：过年了过年了</li>
-<li>2019 年 9 月 17 日：更新一波</li>
-<li>2019 年 8 月 23 日：有工位了，更新一波</li>
-<li>2019 年 7 月 26 日：参加工作一个月，本文创建</li>
-</ul>
-</blockquote>
-<h2 id="介绍一下你自己和所做的工作">介绍一下你自己和所做的工作。</h2>
-<p>后端程序猿一只，刚参加工作，工作中主要使用 Java，自己写玩具一般用 Python + Vue。</p>
-<h2 id="你的职业生涯的转折点是什么">你的职业生涯的转折点是什么？</h2>
-<p>大学阴差阳错被调剂到应用物理专业，好在大一加入了学校的技术社团，接触到了 Linux、前后端的一些概念，决定转专业到计算机，后成功。大二大三整个人浑浑噩噩，不知道在做什么，似乎什么都接触了一些，但是似乎又什么都没深入。 稀里糊涂就到了大三下，别人都在找实习或者考研，自己思考了很久好后决定找工作，方向就是自己一直比较感兴趣的后端开发。 至此，自己的职业生涯开始了</p>
-<h2 id="你都在使用哪些硬件">你都在使用哪些硬件？</h2>
-<ul>
-<li><strong><a href="https://item.jd.com/5456134.html">小米笔记本Pro 16+256</a></strong>：搭配黑果小兵的<a href="https://github.com/daliansky/XiaoMi-Pro-Hackintosh">黑苹果 EFI</a>，使用体验很完美，<s>准备等啥时候苹果改掉愚蠢的蝴蝶键盘再洗白（主要是没钱</s> 单纯是没钱</li>
-<li><strong><a href="https://www.lg.com/cn/monitors/lg-27UL650">LG 27UL650 4K显示器</a></strong>: 槽点是只有一个 dp 口，没有 usb hub</li>
-<li><strong><a href="https://www.apple.com/cn/iphone-xr/specs/">iPhone XR 64G</a></strong>：咸鱼入手<br>
-<s><strong><a href="https://www.mi.com/mi6/">小米6 64G</a></strong>：也算是一代神机了，835 + 6G，性能还没遇到啥问题</s></li>
-<li><strong><a href="http://consumer.panasonic.cn/product/cameras-camcorders/lumix-series/lumix-g-series/dmc-gx85.html">松下 GX85 + 松下 25 f1.7 + 松下 14-42A</a></strong>：闲鱼收的，还在摸索</li>
-<li><strong><a href="https://www.bose.cn/zh_cn/products/headphones/over_ear_headphones/quietcomfort-35-wireless-ii.html">Bose QC35 I</a></strong>：一代 QC35，电源键有小毛病但不影响使用</li>
-<li><strong><a href="https://www.apple.com/cn/airpods/">Airpods 2 有线充电版</a></strong>：几乎找不到缺点</li>
-<li><strong><a href="https://2.taobao.com">斐讯 K2P A1</a></strong>：当年前几批车上的，顺利下车并刷上老毛子固件，放在自如出租屋美滋滋</li>
-<li><strong><a href="https://www.pinduoduo.com/">斐讯 M1 空气检测仪</a></strong>：斐讯遗产，甲醛传感器还不错，颜值也不错，路由器改 dnsmasq 后可以接入 homeassistant 和 homekit。 另外提醒住自如的各位务必注意空气质量</li>
-<li><strong><a href="https://www.raspberrypi.org/products/raspberry-pi-3-model-b/">树莓派3B</a></strong>：在角落里默默吃灰的树莓派，只部署了 homeassistant</li>
-<li><strong><a href="https://www.mi.com/aispeaker/">小爱音响</a></strong> 配合 <strong><a href="https://item.mi.com/1191800001.html">米家空调伴侣</a></strong>：智能家居缺个家，那就先让自如的空调变智能</li>
-<li><strong><a href="https://item.jd.com/3491196.html">IKBC C87 键盘</a></strong>：大二买的键盘，质量不错，一只在用。</li>
-</ul>
-<h2 id="软件呢">软件呢？</h2>
-<h3 id="macos-gui软件">macOS GUI软件</h3>
-<ul>
-<li><strong><a href="https://www.alfredapp.com/">Alfred3</a></strong>：snippets，剪切板，自定义 workflow，爽得很。 另外最近出 Alfred4 了，看了下似乎没啥提升，所以没升级（主要还是没钱</li>
-<li><strong><a href="https://www.proxifier.com/">Proxifier</a></strong>：把 v2，ss 之类的 socks5 代理转换为全局代理，可自定规则，用来加速 git，npm，brew 之流再好不过了，免去配置镜像站的麻烦</li>
-<li><strong><a href="https://1password.com/">1Password 7</a></strong>：保存所有的账号密码、二步验证码等，体验很不错</li>
-<li><strong><a href="https://github.com/Caldis/Mos">Mos</a></strong>：一个用于在 MacOS 上平滑你的鼠标滚动效果或单独设置滚动方向的小工具, 让你的滚轮爽如触控板</li>
-<li><strong><a href="https://iina.io/">IINA</a></strong>：大概是 macOS 上最好用的视频播放器了吧，同时又那么好看，找不到拒绝的理由</li>
-<li><strong><a href="https://bjango.com/mac/istatmenus/">iStat Menus</a></strong> 在菜单栏监控你的电脑状态，满足强迫症的一切要求</li>
-<li><strong><a href="https://www.jetbrains.com/">JetBrains 全家桶</a></strong>：主力开发工具，IDEA、PyCharm 都是我的老朋友</li>
-<li><strong><a href="http://Gridea.dev">Gridea</a></strong>：一个静态博客写作客户端，界面很漂亮，并且支持三个平台。 本博客就是基于此构建</li>
-<li><strong><a href="https://code.visualstudio.com/">VS Code</a></strong>：偶尔写前端时用，速度快</li>
-<li><strong><a href="https://www.jetbrains.com/">JetBrains 全家桶</a></strong>：主力开发工具，IDEA、PyCharm 都是我的老朋友</li>
-</ul>
-<h3 id="终端软件">终端软件</h3>
-<ul>
-<li><strong><a href="https://www.iterm2.com/">iTerm2</a></strong> 配合 <strong><a href="https://ohmyz.sh/">oh-my-zsh</a></strong>：替代 macOS 自带终端，zsh 用起来也很比 bash 要舒服，听说最新的 macOS 10.15 已经默认用 zsh 了</li>
-<li><strong><a href="https://www.mycli.net/">mycli</a></strong>：支持语法高亮和自动补全的 MySQL cli，很好用</li>
-</ul>
-<h3 id="移动端软件">移动端软件</h3>
-<ul>
-<li><strong><a href="https://apps.apple.com/cn/app/%E7%86%8A%E7%8C%AB%E5%90%83%E7%9F%AD%E4%BF%A1-%E9%98%B2%E9%AA%9A%E6%89%B0/id1319191852">熊猫吃短信</a></strong>：吃垃圾短信的</li>
-<li><strong><a href="https://apps.apple.com/tw/app/shadowrocket/id932747118">ShadowRocket</a></strong>：你懂的</li>
-</ul>
-<h2 id="你最理想的工作环境是什么">你最理想的工作环境是什么？</h2>
-<ul>
-<li>成为一名独立开发者，面向自己的产品和乐趣开发，而不是面向工资开发</li>
-<li>不需要通勤</li>
-<li>足够优秀的网络</li>
-<li>空气要好，因为我被自如的甲醛吓怕了</li>
-</ul>
-<h2 id="你平时获得工作灵感的方式有哪些">你平时获得工作灵感的方式有哪些？</h2>
-<ul>
-<li>和朋友的吐槽。平常经常和朋友吐槽各种产品和技术，从中发现了不少问题，也产生了很多灵感（虽然真的去做的不多。。</li>
-<li>逛 GitHub 和 V2EX 等程序猿大量聚集的论坛和社区，往往能发现新的技术</li>
-<li>YouTube 上有大量干货和技术分享</li>
-</ul>
-<h2 id="推荐一件生活中的利器给大家">推荐一件生活中的利器给大家。</h2>
-<p><a href="https://docs.rsshub.app/">RSSHub</a> 是一个轻量、易于扩展的 RSS 生成器, 可以给任何奇奇怪怪的内容生成 RSS 订阅源。<br>
-搭配 Telegram 的 RSSBot 机器人，可以做到很多消息的主动推送，减少信息分散的负担。</p>
-<blockquote>
-<p>本文参与了「利器社群计划」，发现更多创造者和他们的工具：https://liqi.io/community/</p>
-</blockquote>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Java学习-类]]></title>
-        <id>https://gaoliang.me/post/java-class-learn/</id>
-        <link href="https://gaoliang.me/post/java-class-learn/">
-        </link>
-        <updated>2018-04-24T02:06:04.000Z</updated>
-        <content type="html"><![CDATA[<h2 id="1-实现一个类">1. 实现一个类</h2>
-<p>定义一个完整类的格式应该是</p>
-<p>[类访问修饰符] [修饰符] 类名 [extend 父类名] [implements 接口列表]{<br>
-...<br>
-}</p>
-<pre><code class="language-java">public class Employee{
-    private String name;
-    private double salary;
-    ... 
-}
-</code></pre>
-<p>类访问修饰符：</p>
-<table>
-<thead>
-<tr>
-<th>类访问修饰符</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>public</td>
-<td>可以被所有类访问，注意public类的所在的文件名应该与该类名相同,一个java文件至多有一个public类</td>
-</tr>
-<tr>
-<td>package (缺省)</td>
-<td>仅能被相同包中的类访问，缺省的值</td>
-</tr>
-</tbody>
-</table>
-<p>修饰符:</p>
-<table>
-<thead>
-<tr>
-<th>修饰符</th>
-<th>说明</th>
-<th>备注</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>final</td>
-<td>使用此修饰符的类不能被继承</td>
-<td></td>
-</tr>
-<tr>
-<td>abstract</td>
-<td>声明这个类是一个抽象类</td>
-<td>含有抽象方法的类必须声明为抽象类，但是抽象类不一定含有抽象方法</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>Python对比：Python由于鸭子类型的存在，很少使用接口和抽象类，但在需要使用时，可以使用ABCMeta元类和abstractmethod装饰器来实现,参考<a href="http://python3-cookbook.readthedocs.io/zh_CN/latest/c08/p12_define_interface_or_abstract_base_class.html">Python3 Cookbook</a></p>
-</blockquote>
-<h2 id="2-类中的成员">2. 类中的成员</h2>
-<p>Java 类中的成员可以为变量、方法、构造器和初始化块。</p>
-<h3 id="实例成员和类成员静态成员">实例成员和类成员(静态成员)</h3>
-<p>Java 类中的成员分为实例成员和类成员, 没有加 static 修饰符的成员为实例成员，加了 static 修饰符的成员为类成员,或者说静态成员，构造方法不能被 static 修饰。</p>
-<pre><code class="language-java">public class Employee{
-    private int id; // 实例变量
-    private static int last_id; // 类变量
-
-    static { // 静态初始化块
-        last_id = 0;
-    }
-
-    Employee(){ // 构造方法
-        last_id += 1;
-        this.id = last_id;
-    }
-
-    // 实例方法
-    public int get_id(){
-        return this.id;
-    }
-
-    // 类方法
-    public static int get_last_id(){
-        return last_id;
-    }
-}
-</code></pre>
-<p>需要注意，静态方法不能访问实例成员，可以在实例上调用静态方法。 静态方法常用于工厂模式，关于初始化块的内容会在后面介绍。</p>
-<blockquote>
-<p>Python对比：Python中也有实例成员和类成员，其中类变量和实例变量与Java中基本类似，但是Python中静态方法和类方法是两种不同的方法类型，分别用<code>@staticmethod</code> 和 <code>@classmethod</code>装饰器装饰，<code>@classmethod</code>装饰的类方法更接近与Java中的类方法，因为其能够访问到类中定义的其他类成员。上述代码的Python实现如下:</p>
-</blockquote>
-<pre><code class="language-python">class Employee:
-    last_id  = 0
-
-    def __init__(self):
-        # (self.类变量名)只能用来访问类变量
-        # 修改时必须用(类名.变量名)
-        # 否则会导致类变量变成实例变量
-        Employee.last_id +=1
-        self.id = self.last_id
-    
-    def get_id(self):
-        return self.id
-    
-    @classmethod
-    def get_last_id(cls):
-        return cls.last_id
-
-</code></pre>
-<h3 id="成员的访问修饰符">成员的访问修饰符</h3>
-<p>Java 中可以对类中的成员使用访问修饰符，Java 支持四中成员访问修饰符，对应的访问等级如下， 注意其与类访问修饰符的联系。</p>
-<table>
-<thead>
-<tr>
-<th>修饰符</th>
-<th>当前类</th>
-<th>同一包内</th>
-<th>子孙类</th>
-<th>其他包</th>
-<th>其他包子孙类</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>public</td>
-<td>Y</td>
-<td>Y</td>
-<td>Y</td>
-<td>Y</td>
-<td>Y</td>
-</tr>
-<tr>
-<td>protected</td>
-<td>Y</td>
-<td>Y</td>
-<td>Y</td>
-<td>N</td>
-<td>Y/N（说明）</td>
-</tr>
-<tr>
-<td>default</td>
-<td>Y</td>
-<td>Y</td>
-<td>N</td>
-<td>N</td>
-<td>N</td>
-</tr>
-<tr>
-<td>private</td>
-<td>Y</td>
-<td>N</td>
-<td>N</td>
-<td>N</td>
-<td>N</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>
-<p><code>public</code>: 公用访问修饰符， 其修饰的成员可以被任何其他类访问，所有的公有成员都可以被子类继承。</p>
-</li>
-<li>
-<p><code>protect</code>: 受保护的访问修饰符，相较于 public，其修饰的成员不能被其他包中的非子孙类访问，对于子孙类，要分为同包子孙类和非同包子孙类分析。 对于同包子孙类，所有 procted 的成员都可以被访问； 对于非同包的子孙类，较为复杂，可以参考<a href="http://www.runoob.com/w3cnote/java-protected-keyword-detailed-explanation.html">Java protected 关键字详解<br>
-</a>。</p>
-</li>
-<li>
-<p><code>default</code>: 默认访问修饰符，可以被当前类和同一包内的其他类访问。</p>
-</li>
-<li>
-<p><code>private</code>: 私有访问修饰符，最严格的访问修饰符，只能被当前类访问。</p>
-</li>
-</ul>
-<h3 id="final和static修饰符">final和static修饰符</h3>
-<p>static 修饰符在前面已经学习过了，用来定义类级成员。 而 final 修饰符在学习类修饰符时也有提到，被 final 修饰的类不能被继承，其修饰修饰变量和修饰方法时，作用也是类似的。</p>
-<p>final修饰的变量： 表示常量，只能被赋值一次，不能被修改。final 修饰的方法：不能被子类覆盖，但是可以被子类继承。</p>
-<h3 id="初始化块">初始化块</h3>
-<p>初始化块可以分为普通的初始化块和静态初始化块</p>
-<p>普通初始化块： 从某种程度上来说，是构造函数的补充。</p>
-<ul>
-<li>普通初始化块总是在构造函数之前执行</li>
-<li>与构造函数相比，他不接受任何参数。</li>
-<li>一般的使用场景是需要初始化的内容不需要任何参数时，可以提取到初始化块中执行，比如多个构造器中的相同代码可以提取到初始化快中，提高初始化代码的复用。</li>
-</ul>
-<p>静态初始化块：</p>
-<ul>
-<li>在类初始化的阶段调用静态初始化块，而不是创建对象时，因此<strong>总是比普通初始化块要早执行</strong></li>
-<li>只能对静态成员进行初始化，而不能对实例成员进行初始化。</li>
-<li>只能访问静态成员。</li>
-</ul>
-<h3 id="构造器与this">构造器与this</h3>
-<p>构造器是类中的一个特殊的方法，要求其方法名与类名相同，并且不返回然和类型。 其访问修饰符默认是 public 的。 如果指定了其返回值，该方法就只是一个普通方法。</p>
-<p>构造器可以重载，可以使用this语句访问类中的其他实例成员，也可以用 this() 方法访问其他的重载的构造器。</p>
-<h2 id="包的使用">包的使用</h2>
-<p>要把一个类放到包中，需要将包的声明作为源文件的第一个声明。<br>
-如</p>
-<pre><code class="language-java">package com.gaoliang.learn_java;
-
-public class Employee{
-    ...
-}
-</code></pre>
-<p>如果子目录和包的声明相同，即com/gaoliang/learn_java/Employee.java,则执行</p>
-<pre><code class="language-bash">javac com/gaoliang/learn/Employee.java
-</code></pre>
-<p>会在对应的目录产生class文件，然后可以通过全限定的类名运行程序</p>
-<pre><code class="language-bash">java com.gaoliang.learn.Employee
-</code></pre>
-<h3 id="类路径">类路径</h3>
-<p>可以把class文件放到一个或者多个JAR文件中，</p>
-<pre><code>jar cvf library.jar /path/to/*.class ...
-</code></pre>
-<p>如果要试用这些jar文件，则需要通过class path告诉编译器和虚拟机jar文件的位置。class path可以包含</p>
-<ul>
-<li>包含class文件的目录（包含匹配包名的子目录）</li>
-<li>JAR文件</li>
-<li>包含JAR文件的目录</li>
-</ul>
-<p>javac和java命令都有-classpath参数，可以缩写成 -cp，例如</p>
-<pre><code class="language-bash">java -cp .:../libs/lib1.jar:../libs/lib2.jar com.mycompany.Mainclass
-</code></pre>
-<h3 id="导入包">导入包</h3>
-<h4 id="import语句">import语句</h4>
-<p>import语句可以使用户无需使用全限定名的使用类，例如</p>
-<pre><code class="language-java">import java.util.Random;
-Random random =  new Random()
-</code></pre>
-<p>可以使用通配符一次导入一个包中的所有类</p>
-<pre><code class="language-java">import java.util.*;
-</code></pre>
-<p>但是要注意的是通配符只能用来导入类，不能通配的导入包。<br>
-如果出现类名称冲突，需要手动导入自己想要的具体类，手动解决冲突。</p>
-<h4 id="静态导入">静态导入</h4>
-<p>静态导入使用户可以以 import 声明的形式导入静态的方法和变量，例如</p>
-<pre><code class="language-java">import static java.lang.Math.*;
-sqrt(12);
-</code></pre>
-<p><code>sqrt</code>是 Math 类的一个静态方法，可以用<code>import static</code>直接导入。</p>
-<h3 id="嵌套类">嵌套类</h3>
-<p>除了将类组织成包，还可以将一个类定义在另一个类的内部。 这样的类称为嵌套类。</p>
-<h4 id="静态嵌套类">静态嵌套类</h4>
-<p>首先看一个例子</p>
-<pre><code class="language-java">public class Order{
-
-    private static class Item{
-        String description;
-        int quality;
-        double unitPrice;
-        double price() {return quantity * unitPrice;}
-    }
-    
-    private ArrayList&lt;Item&gt; items = new ArrayList&lt;&gt;();
-    ...
-}
-</code></pre>
-<p>这个例子中的 Item 是一个静态嵌套类，由于其使用 private 进行修饰，所以只有Order 类能够使用该类，如果使用 public 进行修饰，由于同时还是一个 static 的类， 所以可以被其他类在外部通过 Order.Item 进行使用。 所以静态嵌套类更像是为一个类增加了一个命名空间，更明显的表示Item是专属与 Order 的，而对于Order 和 Item 来说，两者并没有直接的关系。</p>
-<h4 id="内部类">内部类</h4>
-<p>如果去掉 static 修饰，那么这个嵌套类就变成了内部类。 内部类与静态嵌套类的最大区别是内部类可以获知自己所属的外部类实例。</p>
-<pre><code class="language-java">import java.util.ArrayList;
-
-public class ClassRoom {
-
-    public class Student {
-        String name;
-        int age;
-
-        public Student(String name, int age) {
-            this.name = name;
-            this.age = age;
-        }
-        // 注意这里，student是可以获取外部类的引用的
-        // 所以可以使用外部类的变量和方法，比如这里的students
-        public void leave() {
-            students.remove(this);
-            // 也可以写成这样，ClassRoom.this就是外部类实例的引用。
-            // ClassRoom.this.students.remove(this);
-        }
-    }
-
-    private ArrayList&lt;Student&gt; students = new ArrayList&lt;&gt;();
-
-    public Student enroll(String name, int age) {
-        Student newStudent = new Student(name, age);
-        // 其实是 Student newStudent  = this.new Student(name, age)
-        students.add(newStudent);
-        return newStudent;
-    }
-}
-</code></pre>
-<p>去掉了 static， 出现了本质区别， 此时的 Student 类是知道自己所属于的 ClassRoom 实例的，并且可以使用<code>OutClass.this</code>获取外部类实例的引用。</p>
 ]]></content>
     </entry>
 </feed>

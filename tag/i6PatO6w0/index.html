@@ -64,6 +64,160 @@
     
     <div class="flex-1 order-2 md:order-1">
       <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-经典垃圾回收器
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-15</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        封面图为七种作用于不同分代的收集器，如果两个收集器之间存在连线，就说明它们可以搭配使用
+Serial收集器【新生代】
+
+图为ParNew/Serial Old收集器运行示意图
+最老的单线程收集器，使用标记-复制算法，会Stop The Wo...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+      <img class="flex-shrink-0 self-start md:ml-4 mb-4 md:mb-0 rounded-sm object-cover featured-img order-1 md:order-2 w-full h-40 md:w-56 md:h-32" loading="lazy" src="https://gaoliang.me/post-images/jvm-cong-0-dao-1-jing-dian-la-ji-hui-shou-qi.png" alt="JVM从0到1-经典垃圾回收器">
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie-gen-jie-dian-mei-ju-he-ke-da-xing-fen-xi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-HotSpot垃圾收集算法细节，根节点枚举和可达性分析
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-15</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        根节点枚举
+可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。
+迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie-gen-jie-dian-mei-ju-he-ke-da-xing-fen-xi/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-HotSpot垃圾收集算法细节
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-15</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        根节点枚举
+可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。
+迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-la-ji-hui-shou-gai-nian/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-垃圾回收概念
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-15</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        分代收集理论
+分代收集理论是建立在经验法则上的，基于两个假说
+
+若分代假说：绝大多数对象都是照生夕灭的
+强分代假说：熬过越多次垃圾收集过程的对象就越难以消亡
+设计者一般把Java堆划分为新生代和老年代两个区域，因而才有了“Minor GC”...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-la-ji-hui-shou-gai-nian/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-xu-ni-ji-dui-xiang/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-HotSpot虚拟机对象
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-15</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        当我们写下一个new关键字时，发生了什么？
+虚拟机遇到一个new指令时，先会去检查这个指令的参数是否能够在常量池中定位到一个类的符号引用，然后检查这个类是否被加载、解析和初始化过，如果没有，那么执行该过程。
+检查通过后，虚拟机要为新生对象分...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-xu-ni-ji-dui-xiang/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-fang-fa-diao-yong-yu-xu-fang-fa-biao/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-方法调用与虚方法表
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-15</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        JVM字节码中，共有五种指令来实现方法的调用
+
+invokevirtual 为最常见的情况，用于调用所有的虚方法
+invokespecial 是作为对 private 和构造方法&lt;init&gt;()的调用，以及父类中的方法的调用
+i...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-fang-fa-diao-yong-yu-xu-fang-fa-biao/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-yun-xing-shi-zhan-zheng-jie-gou/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-运行时栈帧结构
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        栈帧存储了方法的局部变量表、操作数栈、动态连接和方法返回地址等信息。每一个方法从调用开始至执行结束的过程，都对应着一个栈帧在虚拟机栈里面从入栈到出栈的过程。在编译Java程序源码的时候，栈帧中需要多大的局部变量表，需要多深的操作数栈就已经被...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-yun-xing-shi-zhan-zheng-jie-gou/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
         <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-lei-jia-zai-qi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
           JVM从0到1-类加载器
         </a>
@@ -121,100 +275,20 @@
     </div>
     
   </div>
-
-  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
-    
-    <div class="flex-1 order-2 md:order-1">
-      <h2 class="text-2xl font-semibold mb-4">
-        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
-          JVM从0到1-class文件常量池
-        </a>
-      </h2>
-      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
-      <div class="mb-4 text-gray-500 dark:text-gray-300">
-        常量池可以比喻为class文件里的资源仓库，他是class文件结构中与其他项目关联最多的数据，通常也是占据class文件空间最大的项目。
-由于常量池中的常量的数量是不固定的，所以在入口处需要防止一个u2类型的数据，代表常量池容量计数器。需要...
-      </div>
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/" class="btn">
-        Read more
-      </a>
-    </div>
-    
-  </div>
-
-  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
-    
-    <div class="flex-1 order-2 md:order-1">
-      <h2 class="text-2xl font-semibold mb-4">
-        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
-          JVM从0到1-class文件结构初探
-        </a>
-      </h2>
-      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
-      <div class="mb-4 text-gray-500 dark:text-gray-300">
-        
-class文件是一组以8个字节为基础单位的二进制流，各个数据项紧凑排列，没有任何分隔符，当遇到需要占用8个字节以上空间的数据项时，会采用大端原则进行排列，即高位在前。
-class文件采用了一种类似C语言结构体的伪结构来存储数据，这个伪结构...
-      </div>
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/" class="btn">
-        Read more
-      </a>
-    </div>
-    
-  </div>
-
-  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
-    
-    <div class="flex-1 order-2 md:order-1">
-      <h2 class="text-2xl font-semibold mb-4">
-        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
-          JVM从0到1-内存划分
-        </a>
-      </h2>
-      <div class="mb-4 text-xs text-gray-500">2020-03-13</div>
-      <div class="mb-4 text-gray-500 dark:text-gray-300">
-        jvm运行时会把内存分为多个数据区域，根据《java虚拟机规范》规定，可以划分为方法区，堆，虚拟机栈，本地方法栈和程序计数器，其中方法区和堆是所有线程所共享的，其他则是每个线程隔离的。
-
-程序计数器
-其中记录的是当前所执行的字节码的行号，字...
-      </div>
-      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/" class="btn">
-        Read more
-      </a>
-    </div>
-    
-  </div>
-
-  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
-    
-    <div class="flex-1 order-2 md:order-1">
-      <h2 class="text-2xl font-semibold mb-4">
-        <a href="https://gaoliang.me/post/java-class-learn/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
-          Java学习-类
-        </a>
-      </h2>
-      <div class="mb-4 text-xs text-gray-500">2018-04-24</div>
-      <div class="mb-4 text-gray-500 dark:text-gray-300">
-        1. 实现一个类
-定义一个完整类的格式应该是
-[类访问修饰符] [修饰符] 类名 [extend 父类名] [implements 接口列表]{
-...
-}
-public class Employee{
-    private String...
-      </div>
-      <a href="https://gaoliang.me/post/java-class-learn/" class="btn">
-        Read more
-      </a>
-    </div>
-    
-      <img class="flex-shrink-0 self-start md:ml-4 mb-4 md:mb-0 rounded-sm object-cover featured-img order-1 md:order-2 w-full h-40 md:w-56 md:h-32" loading="lazy" src="https://gaoliang.me/post-images/java-class-learn.jpeg" alt="Java学习-类">
-    
-  </div>
   
       </div>
 
       
+  <div class="my-4 flex justify-between px-4 md:px-0">
+    
+    
+      <a href="https://gaoliang.me/tag/i6PatO6w0/page/2" class="btn btn-white">
+        下一页
+        <i class="ri-arrow-right-line ml-4"></i>
+      </a>
+    
+  </div>
+
       <footer class="py-12 text-center px-4 md:px-0" v-pre>
   Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
 </footer>

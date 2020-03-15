@@ -1,0 +1,349 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>JVM从0到1-HotSpot垃圾收集算法细节，根节点枚举和可达性分析 - 高亮的杂货铺</title>
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.7.2/animate.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/media/css/tailwind.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="JVM从0到1-HotSpot垃圾收集算法细节，根节点枚举和可达性分析 - 高亮的杂货铺 - Atom Feed" href="https://gaoliang.me/atom.xml">
+
+    
+
+  <meta name="description" content="根节点枚举
+可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。
+迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程..." />
+  <meta property="og:title" content="JVM从0到1-HotSpot垃圾收集算法细节，根节点枚举和可达性分析 - 高亮的杂货铺">
+  <meta property="og:description" content="根节点枚举
+可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。
+迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程..." />
+  <meta property="og:type" content="articles">
+  <meta property="og:url" content="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie-gen-jie-dian-mei-ju-he-ke-da-xing-fen-xi/" />
+  <meta property="og:image" content="https://gaoliang.me/images/avatar.png">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:width" content="1200">
+  <meta name="twitter:title" content="JVM从0到1-HotSpot垃圾收集算法细节，根节点枚举和可达性分析 - 高亮的杂货铺">
+  <meta name="twitter:description" content="根节点枚举
+可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。
+迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程...">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://gaoliang.me/post/jvm-cong-0-dao-1-hotspot-la-ji-shou-ji-suan-fa-xi-jie-gen-jie-dian-mei-ju-he-ke-da-xing-fen-xi/">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+ 
+  
+    <link rel="stylesheet" href="https://gaoliang.me/media/css/prism-synthwave84.css">
+  
+
+  
+</head>
+
+<body>
+  <div class="antialiased flex flex-col min-h-screen" id="app">
+    <a href="https://gaoliang.me" class="fixed top-0 left-0 mt-4 bg-black text-white dark:text-gray-700 dark:bg-yellow-50 dark:hover:bg-black dark:hover:text-white inline-flex p-2 pl-8 hover:text-gray-700 hover:bg-yellow-50 font-bold z-10 transition-fast animated fadeInLeft">
+      高亮的杂货铺
+    </a>
+    <div class="max-w-4xl w-full mx-auto">
+      <div class="shadow-box bg-white dark:bg-gray-600 rounded-lg pt-32 md:pt-64 px-4 md:px-8 pb-8 animated fadeIn mb-8">
+        <h1 class="text-5xl font-semibold leading-normal pb-8 mb-8 border-b-8 border-gray-700">
+          JVM从0到1-HotSpot垃圾收集算法细节，根节点枚举和可达性分析
+        </h1>
+        
+        <div class="mb-8 flex flex-wrap">
+          <div class="text-gray-400 text-sm mr-4">2020-03-15 · 7 min read</div>
+          
+            <a href="https://gaoliang.me/tag/jvm/" class="text-gray-700 text-sm border-b-2 border-dotted border-gray-200 hover:border-gray-600 transition-all duration-100 inline-flex mr-2">
+              <i class="ri-hashtag"></i>
+              JVM
+            </a>
+          
+            <a href="https://gaoliang.me/tag/i6PatO6w0/" class="text-gray-700 text-sm border-b-2 border-dotted border-gray-200 hover:border-gray-600 transition-all duration-100 inline-flex mr-2">
+              <i class="ri-hashtag"></i>
+              Java
+            </a>
+          
+        </div>
+        <div class="markdown mb-8" v-pre>
+          <h2 id="根节点枚举">根节点枚举</h2>
+<p>可达性分析需要从GC Roots集合找引用链。固定可以作为GC Roots的节点主要是全局性的引用、例如常量和非静态属性，以及执行上下文，即栈帧的本地变量表中。</p>
+<p>迄今为止，所有的收集器在根节点枚举这一个步骤都是必须要暂停用户线程的，因此毫无疑问根节点枚举也会有“Stop The World”的困扰。 现在可达性分析算法在查找引用链这个过程已经可以做到和用户线程并发了，但是枚举跟节点这个步骤不行。 因为枚举根节点必须在一个能保障一致性的快照中进行的。 这里一致性指的是整个枚举期间执行子系统看起来就像是被冻结到了某个时间点了，不会出现在分析过程中，根节点上的对象引用关系还在不断变化的情况。 否则将会无法保证分析结果的准确性。</p>
+<p>显然，直接进行遍历是消耗极高的行为，必须进行优化。</p>
+<p>目前主流的Java虚拟机都是使用的准确式垃圾收集，所以当线程停顿后，并不需要检查上下文和全局中的所有引用位置，虚拟机应该有办法能够直接知道哪里存放着对象的引用。 在HotSpot里，是用一组称为OopMap的数据结构来达到这个目的的，一单类加载动作完成的时候，HotSpot就会把对象内什么偏移量上是什么数据类型计算出来。 这样垃圾收集器在扫描时就可以直接得知这些信息了，并不需要真正的一个不漏的从方法区GC Roots开始查找。</p>
+<h2 id="安全点">安全点</h2>
+<p>何时生成OopMap?  显然不能每条指令都生成，这回导致大量的额外存储空间。 实际上HotSpot只会在特定的位置生成OopMap，这种位置被称为安全点。一般安全点位置的选取基本上是遵循“是否能够让程序长时间执行的特征”为标准的，因此，一般会在方法调用、循环跳转、异常跳转等指令时，才会产生安全点。</p>
+<p>安全点的定义有了，还有一个问题就是如何在垃圾回收时，让所有的线程都在最近的的安全点停下来。<br>
+目前主要采用两种方案，抢先式中断和主动式终端，抢先式终端不需要线程的执行代码进行配合，在垃圾回收时，系统首先让所有的用户线程终端，然后如果发现有线程终端点不在安全点上，就恢复这个线程，让他一会再重新终端，直到跑到安全点上，目前基本没有虚拟机采用抢先式中段来暂停线程响应GC事件。</p>
+<p>主动式终端是在垃圾回收需要中断线程的时候，不对线程操作，而是仅仅设置一个标志位，各个线程执行的时候要不断的轮询这个标志位，一但发现中断标志为真，那就自己在最近的安全点上主动挂起。</p>
+<p>因为轮询需要频繁出现，因此必须足够高效，HotSpot通过内存保护陷阱的方式，将操作精简到了一条汇编指令。</p>
+<h2 id="安全区域">安全区域</h2>
+<p>如果一个线程在垃圾回收发生时，正处于sleep或者阻塞状态，就必须要引入安全区域来解决这种情况。<br>
+安全区域是指的能确保在某一段代码片段中，引用关系不会发生变化。 因此在这个区域内任意地方开始垃圾收集都是安全的。</p>
+<p>当用户线程执行到安全区域里的代码时，首先会标识自己已经进入了安全区域，这时候垃圾收集就不需要关心这个线程了，当线程要离开这个区域的时候，必须要检查虚拟机是否已经完成了根节点枚举。如果完成了，就继续执行，否则，就要阻塞知道收到离开安全区域的信号。</p>
+<h2 id="记忆集与卡表">记忆集与卡表</h2>
+<p>为了解决跨代引用的问题，垃圾收集器在新生代中建立了记忆集的结构，以避免整个老年代都被加进 GC Roots的扫描范围。 事实上，并不仅是新生代和老年代之间才存在跨代引用，所有涉及到分区域收集的收集器，都会有相同问题。</p>
+<p>记忆集通常不会直接记录所有存在跨代引用的对象，而是通过卡表的方式，更粗粒度的记录哪一个范围的非收集区域存在指向收集区域的指针就可以了。</p>
+<p>卡表就是一种常见的记忆集实现形式， 卡表的每一项元素都对应着内存区域中一块特定大小的内存块，这个内存块被称为卡页，一把来说，卡页大小都是2的N此幂。 卡表一般都设计成一个字节数组。<br>
+<img src="https://gaoliang.me/post-images/1584264190400.png" alt="" loading="lazy"><br>
+一个卡页的内存中通常包含不止一个对象，只要卡页内有一个（或更多）对象的字段存在着跨代指针，那就将对应卡表的数组元素的值标识为1，称为这个元素变脏（Dirty）。</p>
+<h2 id="写屏障">写屏障</h2>
+<p>通过上面的方式，已经解决了GC Roots扫描范围的问题。 但是卡表谁来维护呢？<br>
+HotSpot虚拟机是通过写屏障（Write Barrier）技术来维护卡表状态的。 写屏障可以看作是虚拟机层面堆引用类型字段赋值这个操作的AOP切面，在引用对象赋值时会产生一个环形通知，供程序执行二外的动作。</p>
+<h2 id="并发的可达性分析">并发的可达性分析</h2>
+<p>并发的可达性分析可能会导致两个问题，一种是把原本消亡的对象错误标记为存活，这不是好事，但其实是可以容忍的，只不过产生了一点逃过本次收集的浮动垃圾而已，下次收集清理掉就好。另一种是把原本存活的对象错误标记为已消亡，这就是非常致命的后果了，程序肯定会因此发生错误。<br>
+<img src="https://gaoliang.me/post-images/1584265987274.png" alt="" loading="lazy"></p>
+<p>Wilson于1994年在理论上证明了，当且仅当以下两个条件同时满足时，会产生“对象消失”的问题，即原本应该是黑色的对象被误标为白色：</p>
+<ul>
+<li>赋值器插入了一条或多条从黑色对象到白色对象的新引用；</li>
+<li>·赋值器删除了全部从灰色对象到该白色对象的直接或间接引用。<br>
+为了解决这种问题， 只要破坏这两个条件中的任意一个即可，因而出现了两种解决方案，增量更新和原始快照。</li>
+</ul>
+<p>增量更新主要是破坏第一个条件，新增引用时，将引用记录下来，当并发扫描结束后，再将这些记录过的引用为根，重新扫描一次。</p>
+<p>原始快照主要是破坏第二个条件，当灰色对象要删除指向白色对象的引用的时候，就将这个要删除的引用记录下来，在并发扫描结束后，再重新将这些记录过的引用关系为跟，重新扫描一遍。 即手动恢复到开始扫描那一刻的快照图进行搜索。</p>
+<p>CMS是基于增量跟新的，G1和Shenandoah是基于原始快照的。</p>
+
+        </div>
+        <!-- Share to Twitter, Weibo, Telegram -->
+        <div class="flex items-center">
+          <div class="mr-4 flex items-center">
+            <i class="ri-share-forward-line text-gray-500"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-blue-500 hover:bg-blue-100 dark:hover:bg-gray-600 inline-flex" @click="shareToTwitter">
+            <i class="ri-twitter-line"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-red-500 hover:bg-red-100 dark:hover:bg-gray-600 inline-flex" @click="shareToWeibo">
+            <i class="ri-weibo-line"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-indigo-500 hover:bg-indigo-100 dark:hover:bg-gray-600 inline-flex" @click="shareToTelegram">
+            <i class="ri-telegram-line"></i>
+          </div>
+        </div>
+      </div>
+
+      
+        
+
+        
+          <link rel="stylesheet" href="https://unpkg.com/disqusjs@1.1/dist/disqusjs.css">
+<script type="application/javascript" src="https://unpkg.com/disqusjs@1.1/dist/disqus.js"></script>
+
+<div id="disqus_thread"></div>
+
+<script type="application/javascript">
+
+var options = {
+  shortname: 'gao-liang-de-za-huo-pu',
+  apikey: 'yetuLkolNo1SQ1c6oRQdEdOLdIpLHymjVOvj23cvFTFwbgwBpfjtGTHKmsSlwdfl',
+}
+if ('') {
+  options.api = ''
+}
+var dsqjs = new DisqusJS(options)
+
+</script>
+
+        
+      
+
+      
+
+      <footer class="py-12 text-center px-4 md:px-0" v-pre>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+</footer>
+    </div>
+
+    <!-- TOC Container -->
+    <div class="fixed right-0 bottom-0 mb-16 mr-4 shadow w-8 h-8 rounded-full flex justify-center items-center z-10 cursor-pointer bg-white dark:bg-gray-500 dark:text-gray-200 hover:shadow-lg transition-all animated fadeInRight" @click="showToc = true">
+      <i class="ri-file-list-line"></i>
+    </div>
+
+    <div class="fixed right-0 top-0 bottom-0 overflow-y-auto w-64 bg-white dark:bg-gray-800 p-4 border-l border-gray-100 dark:border-gray-600 z-10 transition-fast" :class="{ '-mr-64': !showToc }">
+      <div class="flex mb-4 justify-end">
+        <div class="w-8 h-8 inline-flex justify-center items-center rounded-full cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-fast" @click="showToc = false">
+          <i class="ri-close-line text-lg"></i>
+        </div>
+      </div>
+      <div class="post-toc-container">
+        <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E6%A0%B9%E8%8A%82%E7%82%B9%E6%9E%9A%E4%B8%BE">根节点枚举</a></li>
+<li><a href="#%E5%AE%89%E5%85%A8%E7%82%B9">安全点</a></li>
+<li><a href="#%E5%AE%89%E5%85%A8%E5%8C%BA%E5%9F%9F">安全区域</a></li>
+<li><a href="#%E8%AE%B0%E5%BF%86%E9%9B%86%E4%B8%8E%E5%8D%A1%E8%A1%A8">记忆集与卡表</a></li>
+<li><a href="#%E5%86%99%E5%B1%8F%E9%9A%9C">写屏障</a></li>
+<li><a href="#%E5%B9%B6%E5%8F%91%E7%9A%84%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%88%86%E6%9E%90">并发的可达性分析</a></li>
+</ul>
+</li>
+</ul>
+
+      </div>
+    </div>
+
+    <!-- Back to top -->
+    <div class="fixed right-0 bottom-0 mb-4 mr-4 shadow w-8 h-8 rounded-full flex justify-center items-center z-10 cursor-pointer bg-white hover:shadow-lg transition-all dark:bg-gray-500 dark:text-gray-200" @click="backToUp" v-show="scrolled">
+      <i class="ri-arrow-up-line"></i>
+    </div>
+  </div>
+
+  <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe. 
+        It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg">
+  </div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item">
+      </div>
+      <div class="pswp__item">
+      </div>
+      <div class="pswp__item">
+      </div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter">
+        </div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip">
+        </div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+      </button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+      </button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://gaoliang.me/media/scripts/main.js"></script>
+  
+  <!-- Code Highlight -->
+  
+    <script src="https://gaoliang.me/media/prism.js"></script>
+    <script>
+      Prism.highlightAll()
+    </script>
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+  <script>
+    //拿到预览框架，也就是上面的html代码
+    var pswpElement = document.querySelectorAll('.pswp')[0];
+    //定义图片数组变量
+    var imgitems;
+    /**
+    * 用于显示预览界面
+    * @param index 图片数组下标
+    */
+    function viewImg(index) {
+      //其它选项这里不做过多阐述，详情见官网
+      var pswpoptions = {
+        index: parseInt(index, 10), // 开始幻灯片索引。0是第一张幻灯片。必须是整数，而不是字符串。
+        bgOpacity: 0.7, // 背景透明度，0-1
+        maxSpreadZoom: 3, // 缩放级别，不要太大
+      };
+      //初始化并打开PhotoSwipe，pswpElement对应上面预览框架，PhotoSwipeUI_Default为皮肤，imgitems为图片数组，pswpoptions为选项
+      var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, imgitems, pswpoptions);
+      gallery.init()
+    }
+    /**
+    * 用于添加图片点击事件
+    * @param img 图片元素
+    * @param index 所属下标（在imgitems中的位置）
+    */
+    function addImgClick(img, index) {
+      img.onclick = function() {
+        viewImg(index)
+      }
+    }
+    /**
+    * 轮询所有图片，获取src、width、height等数据，加入imgitems，并给图片元素添加事件
+    * 最好在onload中执行该方法，本站因放在最底部，所以直接初始化
+    * 异步加载图片可在图片元素创建完成后调用此方法
+    */
+    function initImg() {
+      //重置图片数组
+      imgitems = [];
+      //查找class:markdown 下的所有img元素并遍历
+      var imgs = document.querySelectorAll('.markdown img');
+      for (var i = 0; i < imgs.length; i++) {
+        var img = imgs[i];
+        //本站相册初始为loading图片，真实图片放在data-src
+        var ds = img.getAttribute("data-src");
+        //创建image对象，用于获取图片宽高
+        var imgtemp = new Image();
+        //判断是否存在data-src
+        if (ds != null && ds.length > 0) {
+          imgtemp.src = ds
+        } else {
+          imgtemp.src = img.src
+        }
+        //判断是否存在缓存
+        if (imgtemp.complete) {
+          var imgobj = {
+            "src": imgtemp.src,
+            "w": imgtemp.width,
+            "h": imgtemp.height,
+          };
+          imgitems[i] = imgobj;
+          addImgClick(img, i);
+        } else {
+          console.log('进来了2')
+          imgtemp.index = i;
+          imgtemp.img = img;
+          imgtemp.onload = function() {
+            var imgobj = {
+              "src": this.src,
+              "w": this.width,
+              "h": this.height,
+            };
+            //不要使用push，因为onload前后顺序会不同
+            imgitems[this.index] = imgobj
+            //添加点击事件
+            addImgClick(this.img, this.index);
+          }
+        }
+      }
+    }
+    //初始化
+    initImg();
+  </script>
+  
+  
+    
+  
+</body>
+
+</html>

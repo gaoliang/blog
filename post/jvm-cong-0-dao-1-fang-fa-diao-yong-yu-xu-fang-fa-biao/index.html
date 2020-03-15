@@ -1,0 +1,396 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>JVM从0到1-方法调用与虚方法表 - 高亮的杂货铺</title>
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.7.2/animate.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/media/css/tailwind.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="JVM从0到1-方法调用与虚方法表 - 高亮的杂货铺 - Atom Feed" href="https://gaoliang.me/atom.xml">
+
+    
+
+  <meta name="description" content="JVM字节码中，共有五种指令来实现方法的调用
+
+invokevirtual 为最常见的情况，用于调用所有的虚方法
+invokespecial 是作为对 private 和构造方法&amp;lt;init&amp;gt;()的调用，以及父类中的方法的调用
+i..." />
+  <meta property="og:title" content="JVM从0到1-方法调用与虚方法表 - 高亮的杂货铺">
+  <meta property="og:description" content="JVM字节码中，共有五种指令来实现方法的调用
+
+invokevirtual 为最常见的情况，用于调用所有的虚方法
+invokespecial 是作为对 private 和构造方法&amp;lt;init&amp;gt;()的调用，以及父类中的方法的调用
+i..." />
+  <meta property="og:type" content="articles">
+  <meta property="og:url" content="https://gaoliang.me/post/jvm-cong-0-dao-1-fang-fa-diao-yong-yu-xu-fang-fa-biao/" />
+  <meta property="og:image" content="https://gaoliang.me/images/avatar.png">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:width" content="1200">
+  <meta name="twitter:title" content="JVM从0到1-方法调用与虚方法表 - 高亮的杂货铺">
+  <meta name="twitter:description" content="JVM字节码中，共有五种指令来实现方法的调用
+
+invokevirtual 为最常见的情况，用于调用所有的虚方法
+invokespecial 是作为对 private 和构造方法&amp;lt;init&amp;gt;()的调用，以及父类中的方法的调用
+i...">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://gaoliang.me/post/jvm-cong-0-dao-1-fang-fa-diao-yong-yu-xu-fang-fa-biao/">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+ 
+  
+    <link rel="stylesheet" href="https://gaoliang.me/media/css/prism-synthwave84.css">
+  
+
+  
+</head>
+
+<body>
+  <div class="antialiased flex flex-col min-h-screen" id="app">
+    <a href="https://gaoliang.me" class="fixed top-0 left-0 mt-4 bg-black text-white dark:text-gray-700 dark:bg-yellow-50 dark:hover:bg-black dark:hover:text-white inline-flex p-2 pl-8 hover:text-gray-700 hover:bg-yellow-50 font-bold z-10 transition-fast animated fadeInLeft">
+      高亮的杂货铺
+    </a>
+    <div class="max-w-4xl w-full mx-auto">
+      <div class="shadow-box bg-white dark:bg-gray-600 rounded-lg pt-32 md:pt-64 px-4 md:px-8 pb-8 animated fadeIn mb-8">
+        <h1 class="text-5xl font-semibold leading-normal pb-8 mb-8 border-b-8 border-gray-700">
+          JVM从0到1-方法调用与虚方法表
+        </h1>
+        
+        <div class="mb-8 flex flex-wrap">
+          <div class="text-gray-400 text-sm mr-4">2020-03-15 · 6 min read</div>
+          
+            <a href="https://gaoliang.me/tag/jvm/" class="text-gray-700 text-sm border-b-2 border-dotted border-gray-200 hover:border-gray-600 transition-all duration-100 inline-flex mr-2">
+              <i class="ri-hashtag"></i>
+              JVM
+            </a>
+          
+            <a href="https://gaoliang.me/tag/i6PatO6w0/" class="text-gray-700 text-sm border-b-2 border-dotted border-gray-200 hover:border-gray-600 transition-all duration-100 inline-flex mr-2">
+              <i class="ri-hashtag"></i>
+              Java
+            </a>
+          
+        </div>
+        <div class="markdown mb-8" v-pre>
+          <p>JVM字节码中，共有五种指令来实现方法的调用</p>
+<ol>
+<li>invokevirtual 为最常见的情况，用于调用所有的虚方法</li>
+<li>invokespecial 是作为对 private 和构造方法<code>&lt;init&gt;()</code>的调用，以及父类中的方法的调用</li>
+<li>invokeinterface 的实现跟 invokevirtual 类似，用于调用接口方法，会在运行时再确定一个实现该接口的对象。</li>
+<li>invokestatic 是对静态方法的调用。</li>
+<li>invokedynamic 先在运行时动态解析出调用点限定符所引用的方法，然后再执行该方法</li>
+</ol>
+<h2 id="解析调用">解析调用</h2>
+<p>我们知道，在class文件中，所有的方法调用都是一个常量池中的符号引用。 在类的解析阶段，会将其中的一部分符号引用转换为直接引用，这种解析能够成立的前提是方法在真正运行之前就有一个可确定的调用版本，并且这个版本是在运行期间不可变的。 这类方法的调用被称为解析（Resolution）</p>
+<p>使用invokestaic和invokespecial指令调用的方法，都是可以在class文件的解析阶段中确定唯一的调用版本的，java语言中符合这种条件的方法一共有四种，包括静态方法，私有方法，实例方法，父类方法。非此四类方法会存在多态的情况，因此无法在解析阶段就确定方法的唯一调用版本。</p>
+<p>除了被invokestatic和invokespecial指令调用的方法外，还有被final修饰的方法，因为其无法被继承，所以也可以被解析调用。但是final方法是使用invokevirtual指令进行调用的。</p>
+<p>解析调用是一个静态的过程，在编译期间就可以完全确定，在类加载的阶段会把涉及到的符号引用完全转换为明确的直接引用，无需延迟到运行期间进行动态处理。</p>
+<h2 id="动态分派dispatch">动态分派（Dispatch）</h2>
+<p>因为Java是一门面向对象的程序语言，所以具有继承、封装、多态三个特征，分派调用过程就是多态性的提现。</p>
+<h3 id="静态分派">静态分派</h3>
+<p>首先要理解静态类型和实际类型的关系</p>
+<pre><code class="language-java">class Human{};
+class Man extends Human{};
+Human man = new Man();
+</code></pre>
+<p>在上述代码中，Human被成为man的静态类型，而Man则是man的实际类型。静态类型在编译期间是可知的，但是实际类型在编译期间是不可知的，例如下面这个例子</p>
+<pre><code class="language-java">Human human = (new Random()).nextBoolean() ? new Man() : new Woman();
+public static sayHello(Human human){human.sayHello();}
+public static sayHello(Man man){man.sayHello();}
+public static sayHello(Woman woman){woman.sayHello();}
+</code></pre>
+<p>编译期间，编译器会根据对象的静态类型去选择使用方法的哪个重载版本，在上述方法中，如果我们调用<code>sayHello(human)</code>，必定是调用的父类Human的sayHello方法，因为javac编译器会根据静态类型选择合适的重载版本。</p>
+<h3 id="动态分派">动态分派</h3>
+<p>动态分派主要体现在方法重写(Overide)上。</p>
+<pre><code class="language-java">public class DynamicDispatch {
+    static abstract class Human {
+        protected abstract void sayHello();
+    }
+    static class Man extends Human {
+        @Override
+        protected void sayHello() {
+            System.out.println(&quot;man say hello&quot;);
+        }
+    }
+    static class Woman extends Human {
+        @Override
+        protected void sayHello() {
+            System.out.println(&quot;woman say hello&quot;);
+        }
+    }
+    public static void main(String[] args) {
+        Human man = new Man();
+        Human woman = new Woman();
+        man.sayHello();
+        woman.sayHello();
+        man = new Woman();
+        man.sayHello();
+    }
+}
+</code></pre>
+<p>这个例子，最终会输出</p>
+<pre><code class="language-bash">man say hello
+woman say hello
+woman say hello
+</code></pre>
+<p>这是由于，此时选择方法的调用版本时，不在是根据静态类型来决定的，而是根据实际类型。<br>
+查看这个方法的字节码，可以发现调用sayHello方法时间，生成的字节码是invokevirtual，invokevirual方法并不是把常量池中方法的符号引用解析到直接引用上就结束了，还会根据方法接收者的实际类型来选择方法版本，这就是Java语言中方法重写的本质。<br>
+invokevirutal指令运行时解析的过程大概分为四个步骤</p>
+<ol>
+<li>找到操作数栈顶的第一个元素所指向的实际类型，计做C</li>
+<li>如果在类型C中找到了与常量的描述符和简单方法都相符的方法，则进行权限校验，通过则返回引用，查找结束，否则返回<code>java.lang.IllegalAccessError</code>异常。</li>
+<li>否则，按照继承关系从下往上查找C的各个父类进行第二步的搜索验证</li>
+<li>如果没有找到合适的方法，则抛出<code>java.lang.AbstarctMethodError</code>异常</li>
+</ol>
+<p>字段是没有多态性的</p>
+<h3 id="虚拟机动态分配的实现">虚拟机动态分配的实现</h3>
+<p>动态分派是一个非常频繁的动作，而且动态分派需要在接收者类型的方法元数据中搜索合适的目标方法，因此Java虚拟机为了优化性能，运行时一般不会如此品牌的搜索类型元数据。</p>
+<p>通常，会通过建立一个虚方法表的方式，使用虚方法表索引来代替元数据查找以提高性能。<br>
+虚方法表中存放着各个方法的实际入口地址。如果某个方法在子类中没有被重写，那子类的虚方法表中的地址入口和父类相同方法的地址入口是一致的，都指向父类的实现入口。如果子类中重写了这个方法，子类虚方法表中的地址也会被替换为指向子类实现版本的入口地址。虚方法表一般在类加载的连接阶段进行初始化，准备了类的变量初始值后，虚拟机会把该类的虚方法表也一同初始化完毕。</p>
+
+        </div>
+        <!-- Share to Twitter, Weibo, Telegram -->
+        <div class="flex items-center">
+          <div class="mr-4 flex items-center">
+            <i class="ri-share-forward-line text-gray-500"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-blue-500 hover:bg-blue-100 dark:hover:bg-gray-600 inline-flex" @click="shareToTwitter">
+            <i class="ri-twitter-line"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-red-500 hover:bg-red-100 dark:hover:bg-gray-600 inline-flex" @click="shareToWeibo">
+            <i class="ri-weibo-line"></i>
+          </div>
+          <div class="px-4 cursor-pointer text-indigo-500 hover:bg-indigo-100 dark:hover:bg-gray-600 inline-flex" @click="shareToTelegram">
+            <i class="ri-telegram-line"></i>
+          </div>
+        </div>
+      </div>
+
+      
+        
+
+        
+          <link rel="stylesheet" href="https://unpkg.com/disqusjs@1.1/dist/disqusjs.css">
+<script type="application/javascript" src="https://unpkg.com/disqusjs@1.1/dist/disqus.js"></script>
+
+<div id="disqus_thread"></div>
+
+<script type="application/javascript">
+
+var options = {
+  shortname: 'gao-liang-de-za-huo-pu',
+  apikey: 'yetuLkolNo1SQ1c6oRQdEdOLdIpLHymjVOvj23cvFTFwbgwBpfjtGTHKmsSlwdfl',
+}
+if ('') {
+  options.api = ''
+}
+var dsqjs = new DisqusJS(options)
+
+</script>
+
+        
+      
+
+      
+
+      <footer class="py-12 text-center px-4 md:px-0" v-pre>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+</footer>
+    </div>
+
+    <!-- TOC Container -->
+    <div class="fixed right-0 bottom-0 mb-16 mr-4 shadow w-8 h-8 rounded-full flex justify-center items-center z-10 cursor-pointer bg-white dark:bg-gray-500 dark:text-gray-200 hover:shadow-lg transition-all animated fadeInRight" @click="showToc = true">
+      <i class="ri-file-list-line"></i>
+    </div>
+
+    <div class="fixed right-0 top-0 bottom-0 overflow-y-auto w-64 bg-white dark:bg-gray-800 p-4 border-l border-gray-100 dark:border-gray-600 z-10 transition-fast" :class="{ '-mr-64': !showToc }">
+      <div class="flex mb-4 justify-end">
+        <div class="w-8 h-8 inline-flex justify-center items-center rounded-full cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-fast" @click="showToc = false">
+          <i class="ri-close-line text-lg"></i>
+        </div>
+      </div>
+      <div class="post-toc-container">
+        <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E8%A7%A3%E6%9E%90%E8%B0%83%E7%94%A8">解析调用</a></li>
+<li><a href="#%E5%8A%A8%E6%80%81%E5%88%86%E6%B4%BEdispatch">动态分派（Dispatch）</a>
+<ul>
+<li><a href="#%E9%9D%99%E6%80%81%E5%88%86%E6%B4%BE">静态分派</a></li>
+<li><a href="#%E5%8A%A8%E6%80%81%E5%88%86%E6%B4%BE">动态分派</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%8A%A8%E6%80%81%E5%88%86%E9%85%8D%E7%9A%84%E5%AE%9E%E7%8E%B0">虚拟机动态分配的实现</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      </div>
+    </div>
+
+    <!-- Back to top -->
+    <div class="fixed right-0 bottom-0 mb-4 mr-4 shadow w-8 h-8 rounded-full flex justify-center items-center z-10 cursor-pointer bg-white hover:shadow-lg transition-all dark:bg-gray-500 dark:text-gray-200" @click="backToUp" v-show="scrolled">
+      <i class="ri-arrow-up-line"></i>
+    </div>
+  </div>
+
+  <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe. 
+        It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg">
+  </div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item">
+      </div>
+      <div class="pswp__item">
+      </div>
+      <div class="pswp__item">
+      </div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter">
+        </div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip">
+        </div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+      </button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+      </button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://gaoliang.me/media/scripts/main.js"></script>
+  
+  <!-- Code Highlight -->
+  
+    <script src="https://gaoliang.me/media/prism.js"></script>
+    <script>
+      Prism.highlightAll()
+    </script>
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+  <script>
+    //拿到预览框架，也就是上面的html代码
+    var pswpElement = document.querySelectorAll('.pswp')[0];
+    //定义图片数组变量
+    var imgitems;
+    /**
+    * 用于显示预览界面
+    * @param index 图片数组下标
+    */
+    function viewImg(index) {
+      //其它选项这里不做过多阐述，详情见官网
+      var pswpoptions = {
+        index: parseInt(index, 10), // 开始幻灯片索引。0是第一张幻灯片。必须是整数，而不是字符串。
+        bgOpacity: 0.7, // 背景透明度，0-1
+        maxSpreadZoom: 3, // 缩放级别，不要太大
+      };
+      //初始化并打开PhotoSwipe，pswpElement对应上面预览框架，PhotoSwipeUI_Default为皮肤，imgitems为图片数组，pswpoptions为选项
+      var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, imgitems, pswpoptions);
+      gallery.init()
+    }
+    /**
+    * 用于添加图片点击事件
+    * @param img 图片元素
+    * @param index 所属下标（在imgitems中的位置）
+    */
+    function addImgClick(img, index) {
+      img.onclick = function() {
+        viewImg(index)
+      }
+    }
+    /**
+    * 轮询所有图片，获取src、width、height等数据，加入imgitems，并给图片元素添加事件
+    * 最好在onload中执行该方法，本站因放在最底部，所以直接初始化
+    * 异步加载图片可在图片元素创建完成后调用此方法
+    */
+    function initImg() {
+      //重置图片数组
+      imgitems = [];
+      //查找class:markdown 下的所有img元素并遍历
+      var imgs = document.querySelectorAll('.markdown img');
+      for (var i = 0; i < imgs.length; i++) {
+        var img = imgs[i];
+        //本站相册初始为loading图片，真实图片放在data-src
+        var ds = img.getAttribute("data-src");
+        //创建image对象，用于获取图片宽高
+        var imgtemp = new Image();
+        //判断是否存在data-src
+        if (ds != null && ds.length > 0) {
+          imgtemp.src = ds
+        } else {
+          imgtemp.src = img.src
+        }
+        //判断是否存在缓存
+        if (imgtemp.complete) {
+          var imgobj = {
+            "src": imgtemp.src,
+            "w": imgtemp.width,
+            "h": imgtemp.height,
+          };
+          imgitems[i] = imgobj;
+          addImgClick(img, i);
+        } else {
+          console.log('进来了2')
+          imgtemp.index = i;
+          imgtemp.img = img;
+          imgtemp.onload = function() {
+            var imgobj = {
+              "src": this.src,
+              "w": this.width,
+              "h": this.height,
+            };
+            //不要使用push，因为onload前后顺序会不同
+            imgitems[this.index] = imgobj
+            //添加点击事件
+            addImgClick(this.img, this.index);
+          }
+        }
+      }
+    }
+    //初始化
+    initImg();
+  </script>
+  
+  
+    
+  
+</body>
+
+</html>

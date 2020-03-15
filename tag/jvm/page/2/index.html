@@ -1,0 +1,148 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>高亮的杂货铺</title>
+<link rel="shortcut icon" href="https://gaoliang.me/favicon.ico">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.7.2/animate.min.css">
+<link rel="stylesheet" href="https://gaoliang.me/media/css/tailwind.css">
+<link rel="stylesheet" href="https://gaoliang.me/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="高亮的杂货铺 - Atom Feed" href="https://gaoliang.me/atom.xml">
+
+    
+
+  <meta name="description" content="Happy coding!" />
+</head>
+<body>
+  <div class="antialiased flex flex-col min-h-screen" id="app">
+
+    <div class="nav py-3 md:py-8 fixed w-full z-10 bg-gray-50 dark:bg-gray-700 transition-all duration-300" :class="{ 'scroll': scrolled }">
+  <div class="flex justify-end px-4">
+    <div class="w-8 h-8 flex justify-center items-center rounded-full md:hidden" @click="showMenu = !showMenu">
+      <i class="ri-close-line" v-show="showMenu"></i>
+      <i class="ri-menu-3-line" v-show="!showMenu"></i>
+    </div>
+  </div>
+  <nav class="max-w-4xl w-full mx-auto text-center flex flex-col md:flex-row justify-center md:block" :class="`${ showMenu ? 'block' : 'hidden' }`">
+    
+      <a href="/" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        首页
+      </a>
+    
+      <a href="/archives" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        归档
+      </a>
+    
+      <a href="/tags" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        标签
+      </a>
+    
+      <a href="https://gaoliang.me/post/experiments" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        试验田
+      </a>
+    
+      <a href="/post/about" target="" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+        关于
+      </a>
+    
+    <a href="https://gaoliang.me/atom.xml" target="_blank" class="py-2 md:py-1 px-4 mx-4 inline-flex transition font-semibold rounded dark:hover:bg-gray-600 hover:bg-gray-200">
+      RSS
+    </a>
+  </nav>
+</div>
+
+    <div class="max-w-4xl w-full mx-auto pt-32">
+      <h1 class="text-2xl font-bold pb-8 flex justify-center items-center">
+        <i class="ri-hashtag"></i>
+        JVM
+      </h1>
+      <div class="shadow-box bg-white dark:bg-gray-600 border-gray-300 rounded-none md:rounded-lg -mx-1 md:mx-0 md:px-0">
+        
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-class文件常量池
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        常量池可以比喻为class文件里的资源仓库，他是class文件结构中与其他项目关联最多的数据，通常也是占据class文件空间最大的项目。
+由于常量池中的常量的数量是不固定的，所以在入口处需要防止一个u2类型的数据，代表常量池容量计数器。需要...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-chang-liang-chi/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-class文件结构初探
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-14</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        
+class文件是一组以8个字节为基础单位的二进制流，各个数据项紧凑排列，没有任何分隔符，当遇到需要占用8个字节以上空间的数据项时，会采用大端原则进行排列，即高位在前。
+class文件采用了一种类似C语言结构体的伪结构来存储数据，这个伪结构...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-class-wen-jian-jie-gou/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="p-8 border-b border-gray-200 dark:border-gray-700 flex relative overflow-hidden flex-col md:flex-row animated fadeIn">
+    
+    <div class="flex-1 order-2 md:order-1">
+      <h2 class="text-2xl font-semibold mb-4">
+        <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/" class="text-gray-700 dark:text-gray-200 border-b-2 border-dotted border-gray-200 dark:border-gray-400 dark:hover:border-gray-200 hover:border-gray-600 transition-all duration-100">
+          JVM从0到1-内存划分
+        </a>
+      </h2>
+      <div class="mb-4 text-xs text-gray-500">2020-03-13</div>
+      <div class="mb-4 text-gray-500 dark:text-gray-300">
+        jvm运行时会把内存分为多个数据区域，根据《java虚拟机规范》规定，可以划分为方法区，堆，虚拟机栈，本地方法栈和程序计数器，其中方法区和堆是所有线程所共享的，其他则是每个线程隔离的。
+
+程序计数器
+其中记录的是当前所执行的字节码的行号，字...
+      </div>
+      <a href="https://gaoliang.me/post/jvm-cong-0-dao-1-nei-cun-guan-li/" class="btn">
+        Read more
+      </a>
+    </div>
+    
+  </div>
+  
+      </div>
+
+      
+  <div class="my-4 flex justify-between px-4 md:px-0">
+    
+      <a href="https://gaoliang.me/tag/jvm" class="btn btn-white">
+        <i class="ri-arrow-left-line mr-4"></i>
+        上一页
+      </a>
+    
+    
+  </div>
+
+      <footer class="py-12 text-center px-4 md:px-0" v-pre>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+</footer>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://gaoliang.me/media/scripts/main.js"></script>
+</body>
+</html>
